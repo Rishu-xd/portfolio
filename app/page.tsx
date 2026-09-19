@@ -1,22 +1,22 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 
 const socials = [
-  { label: "GitHub", icon: "GH", href: "https://github.com" },
+  { label: "GitHub", image: "/github.png", href: "https://github.com/Rishu-xd" },
   { label: "X", icon: "X", href: "https://x.com" },
-  { label: "LinkedIn", icon: "in", href: "https://linkedin.com" },
-  { label: "Email", icon: "@", href: "mailto:hello@thorfin.studio" },
+  { label: "LinkedIn", image: "/linkedin.png", href: "https://linkedin.com" },
+  { label: "Email", image: "/gmailnew.png", href: "mailto:rishu99xd@gmail.com" },
 ];
 
-const months = ["Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"];
-const contributionCells = Array.from({ length: 364 }, (_, index) => {
-  const week = Math.floor(index / 7);
-  const day = index % 7;
-  const intensity = (week * 7 + day * 13) % 17;
-
-  return intensity > 14 ? 4 : intensity > 11 ? 3 : intensity > 7 ? 2 : intensity > 3 ? 1 : 0;
-});
+type ContributionData = {
+  username: string;
+  total: number;
+  year: number;
+  cells: { date: string; level: number }[];
+};
 
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
@@ -25,6 +25,32 @@ const fadeUp = {
 
 export default function Page() {
   const shouldReduceMotion = useReducedMotion();
+  const [selectedYear, setSelectedYear] = useState(2026);
+  const [contributions, setContributions] = useState<ContributionData | null>(null);
+  const [contributionError, setContributionError] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch(`/api/github-contributions?year=${selectedYear}`, { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error("Unable to load contributions");
+        return response.json() as Promise<ContributionData>;
+      })
+      .then((data) => {
+        setContributionError(false);
+        setContributions(data);
+      })
+      .catch((error: Error) => {
+        if (error.name !== "AbortError") setContributionError(true);
+      });
+
+    return () => controller.abort();
+  }, [selectedYear]);
+
+  const contributionMonths = contributions
+    ? Array.from(new Set(contributions.cells.map((cell) => new Date(`${cell.date}T00:00:00`).toLocaleString("en-US", { month: "short" }))))
+    : [];
 
   return (
     <main className="min-h-screen bg-[#090909] px-5 pb-24 text-[#e8e8e8] sm:px-8">
@@ -59,12 +85,12 @@ export default function Page() {
         variants={{ visible: { transition: { staggerChildren: shouldReduceMotion ? 0 : 0.08 } } }}
       >
         <motion.header className="flex items-center gap-4" variants={fadeUp} transition={{ duration: 0.65 }}>
-          <motion.div
-            className="grid size-16 shrink-0 place-items-center rounded-[17px] bg-[#ae1488] text-2xl font-bold text-[#101010] shadow-[0_0_30px_rgba(174,20,136,0.16)] sm:size-[64px]"
-            whileHover={shouldReduceMotion ? undefined : { rotate: 5, scale: 1.05 }}
+          <motion.div 
+            className=" grid size-16 border-1 border-green-200 shrink-0 place-items-center rounded-[17px] bg-[url('/images/hero.jpg')] bg-cover bg-center text-2xl font-bold shadow-[0_0_30px_rgba(174,20,136,0.16)] sm:size-[64px]"
+            whileHover={shouldReduceMotion ? undefined : { scale: 1.05 }}
             transition={{ type: "spring", stiffness: 300, damping: 18 }}
           >
-            A
+            
           </motion.div>
           <div>
             <h1 className="text-[28px] font-semibold leading-none tracking-[-0.04em] text-white sm:text-[31px]">Akhand Veer Singh</h1>
@@ -74,7 +100,7 @@ export default function Page() {
 
         <motion.div className="mt-11 grid grid-cols-2 gap-y-6 sm:grid-cols-3 sm:gap-x-16" variants={fadeUp} transition={{ duration: 0.65 }}>
           <Info label="LOCATION" value="India" icon="⌖" />
-          <Info label="EMAIL" value="hello@thorfin.studio" icon="✉" />
+          <Info label="EMAIL" value="rishu99xd@gmail.com" icon="✉" />
           <Info label="PRONOUNS" value="he/him" icon="♙" />
         </motion.div>
 
@@ -97,40 +123,83 @@ export default function Page() {
               whileHover={shouldReduceMotion ? undefined : { y: -3, scale: 1.12 }}
               whileTap={shouldReduceMotion ? undefined : { scale: 0.92 }}
             >
-              {social.icon}
+              {social.image ? (
+                <Image
+                  src={social.image}
+                  alt=""
+                  width={22}
+                  height={22}
+                  className="size-[22px] object-contain"
+                />
+              ) : (
+                social.icon
+              )}
             </motion.a>
           ))}
         </motion.div>
 
         <motion.section className="mt-12 overflow-hidden" variants={fadeUp} transition={{ duration: 0.65 }} aria-label="Contribution activity">
-          <div className="mb-2 flex min-w-[660px] justify-between px-0.5 text-[12px] font-semibold text-white/75">
-            {months.map((month, index) => <span key={`${month}-${index}`}>{month}</span>)}
+          <div className="mb-5 flex items-center justify-between">
+            <label className="flex items-center gap-2 text-[12px] text-white/50" htmlFor="contribution-year">
+              Contribution settings
+              <span aria-hidden="true">▾</span>
+            </label>
+            <select
+              id="contribution-year"
+              value={selectedYear}
+              onChange={(event) => {
+                setContributions(null);
+                setContributionError(false);
+                setSelectedYear(Number(event.target.value));
+              }}
+              className="rounded-md border border-[#2674df] bg-[#2674df] px-4 py-2 text-[13px] font-medium text-white outline-none transition-colors hover:bg-[#347fe5]"
+            >
+              {[2026, 2025, 2024, 2023].map((year) => <option key={year} value={year} className="bg-[#10151b] text-white">{year}</option>)}
+            </select>
           </div>
-          <div className="contribution-scroll overflow-x-auto pb-2">
-            <div className="grid w-[770px] grid-flow-col grid-rows-7 gap-[3px]">
-              {contributionCells.map((level, index) => (
-                <motion.span
-                  key={index}
-                  className={`contribution-cell level-${level}`}
-                  initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.6 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: shouldReduceMotion ? 0 : index * 0.0015, duration: 0.28 }}
-                  title={`${level} contributions`}
-                />
-              ))}
+          {contributions ? (
+            <>
+              <div className="mb-2 flex min-w-[660px] items-center justify-between px-0.5 text-[12px] font-semibold text-white/75">
+                {contributionMonths.map((month, index) => <span key={`${month}-${index}`}>{month}</span>)}
+                <a className="ml-4 flex shrink-0 items-center gap-2 text-white/45 transition-colors hover:text-white" href="https://github.com/Rishu-xd" aria-label="View GitHub profile">
+                  <Image src="/github.png" alt="" width={16} height={16} className="size-4 object-contain" />
+                  GitHub
+                </a>
+              </div>
+              <div className="contribution-scroll overflow-x-auto pb-2">
+                <div className="contribution-grid grid grid-flow-col grid-rows-7">
+                  {contributions.cells.map((cell) => (
+                    <motion.span
+                      key={cell.date}
+                      className={`contribution-cell level-${cell.level}`}
+                      initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.6 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      whileHover={cell.level === 0 || shouldReduceMotion ? undefined : { scale: 1.65, zIndex: 10 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: shouldReduceMotion ? 0 : 0.0015, duration: 0.28, type: "spring", stiffness: 420, damping: 22 }}
+                      title={`${cell.date}: GitHub contribution level ${cell.level}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="h-[108px] pt-10 text-sm text-white/35">
+              {contributionError ? "GitHub activity is unavailable right now." : "Loading GitHub activity..."}
+            </p>
+          )}
+          {contributions && (
+            <div className="mt-2 flex items-center justify-between text-[12px] text-white/70">
+              <span><strong className="font-semibold text-white">{contributions.total}</strong> Contributions · {contributions.year}</span>
+              <span className="hidden items-center gap-1.5 sm:flex">Less <i className="contribution-cell level-0" /><i className="contribution-cell level-1" /><i className="contribution-cell level-2" /><i className="contribution-cell level-3" /><i className="contribution-cell level-4" /> More</span>
             </div>
-          </div>
-          <div className="mt-2 flex items-center justify-between text-[12px] text-white/70">
-            <span><strong className="font-semibold text-white">354</strong> Contributions · 2025-26</span>
-            <span className="hidden items-center gap-1.5 sm:flex">Less <i className="contribution-cell level-0" /><i className="contribution-cell level-1" /><i className="contribution-cell level-2" /><i className="contribution-cell level-3" /><i className="contribution-cell level-4" /> More</span>
-          </div>
+          )}
         </motion.section>
 
         <motion.section id="projects" className="mt-16 border-t border-white/[0.06] pt-6" variants={fadeUp} transition={{ duration: 0.65 }}>
           <p className="text-[12px] font-semibold tracking-[0.14em] text-white/45">TECH STACK</p>
           <div className="mt-5 flex flex-wrap gap-2" id="blogs">
-            {["TypeScript", "React", "Next.js", "Tailwind CSS", "Node.js"].map((tech) => <span key={tech} className="rounded-md border border-white/[0.08] px-3 py-1.5 text-xs text-white/50">{tech}</span>)}
+            {["TypeScript", "React", "Next.js", "Tailwind CSS", "Node.js", "Python", "C++"].map((tech) => <span key={tech} className="rounded-md border border-white/[0.08] px-3 py-1.5 text-xs text-white/50">{tech}</span>)}
           </div>
         </motion.section>
       </motion.div>
