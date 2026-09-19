@@ -1,12 +1,37 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 
 export default function Page() {
   const shouldReduceMotion = useReducedMotion();
   const [activeSection, setActiveSection] = useState("work");
+  const [heroProgress, setHeroProgress] = useState(0);
+  const heroRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const updateHeroProgress = () => {
+      const hero = heroRef.current;
+      if (!hero) return;
+
+      const scrollDistance = hero.offsetHeight - window.innerHeight;
+      const progress = scrollDistance > 0
+        ? (window.scrollY - hero.offsetTop) / scrollDistance
+        : 1;
+
+      setHeroProgress(Math.min(1, Math.max(0, progress)));
+    };
+
+    updateHeroProgress();
+    window.addEventListener("scroll", updateHeroProgress, { passive: true });
+    window.addEventListener("resize", updateHeroProgress);
+
+    return () => {
+      window.removeEventListener("scroll", updateHeroProgress);
+      window.removeEventListener("resize", updateHeroProgress);
+    };
+  }, []);
 
   useEffect(() => {
     const sections = ["work", "about", "contact"]
@@ -36,6 +61,12 @@ export default function Page() {
     if (!target) return;
 
     event.preventDefault();
+
+    if (sectionId !== "top" && heroProgress < 1) {
+      heroRef.current?.scrollIntoView({ behavior: shouldReduceMotion ? "auto" : "smooth" });
+      return;
+    }
+
     setActiveSection(sectionId ?? "work");
     target.scrollIntoView({ behavior: shouldReduceMotion ? "auto" : "smooth" });
   }
@@ -98,25 +129,51 @@ export default function Page() {
 
       <motion.section
         id="top"
-        className="mx-auto flex min-h-[calc(100vh-92px)] max-w-6xl flex-col justify-center"
+        ref={heroRef}
+        className="relative h-[200vh]"
         initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
       >
-        <motion.div className="flex gap-3 m-10 ">
-            <motion.div className="w-100 h-150 bg-white rounded-2xl">
-
+        <div className="sticky top-0 flex h-screen items-center overflow-hidden">
+          <motion.div
+            className="mx-auto flex w-full max-w-6xl items-stretch px-2 sm:px-6"
+            animate={{ gap: `${12 * (1 - heroProgress)}px` }}
+            transition={{ duration: 0.08, ease: "linear" }}
+          >
+            <motion.div
+              className="flex h-[62vh] min-w-0 flex-1 items-center rounded-[18px] justify-center bg-[#f5f1e8] p-4 text-[#101010] sm:p-6"
+              animate={{ borderTopRightRadius: `${18 * (1 - heroProgress)}px`  , borderBottomRightRadius:`${18 * (1 - heroProgress)}px`}}
+              transition={{ duration: 0.08, ease: "linear" }}
+            >
+              BUILD
             </motion.div>
-            <motion.div className="w-100 h-150 bg-white rounded-2xl">
 
+            <motion.div
+              className="flex h-[62vh] min-w-0 flex-1 items-center bg-[#f5f1e8] justify-center p-4 text-[#101010] sm:p-6"
+              animate={{ borderRadius: `${18 * (1 - heroProgress)}px` }}
+              transition={{ duration: 0.08, ease: "linear" }}
+            >
+              CREATE
             </motion.div>
-            <motion.div className="w-100 h-150 bg-white rounded-2xl">
 
+            <motion.div
+              className="flex h-[62vh] min-w-0 flex-1 items-center bg-[#f5f1e8] justify-center p-4 text-[#101010] sm:p-6"
+              animate={{ borderRadius: `${18 * (1 - heroProgress)}px` }}
+              transition={{ duration: 0.08, ease: "linear" }}
+            >
+              EXPERIMENT
             </motion.div>
-            <motion.div className="w-100 h-150 bg-white rounded-2xl">
 
+            <motion.div
+              className="flex h-[62vh] min-w-0 flex-1 items-center rounded-[18px] bg-[#f5f1e8] justify-center p-4 text-[#101010] sm:p-6"
+              animate={{borderTopLeftRadius: `${18 * (1 - heroProgress)}px`  , borderBottomLeftRadius:`${18 * (1 - heroProgress)}px`}}
+              transition={{ duration: 0.08, ease: "linear" }}
+            >
+              SHIP
             </motion.div>
-        </motion.div>
+          </motion.div>
+        </div>
       </motion.section>
 
 
