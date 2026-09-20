@@ -19,6 +19,7 @@ const techStack = [
   { label: "Node.js", image: "/skills/nodejs.png" },
   { label: "Python", image: "/skills/python.png" },
   { label: "C++", image: "/skills/cpp.png" },
+  { label: "Supabase", image: "/skills/supabase.png" },
 ];
 
 type ContributionData = {
