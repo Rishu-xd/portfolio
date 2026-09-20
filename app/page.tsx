@@ -6,9 +6,19 @@ import { useEffect, useState } from "react";
 
 const socials = [
   { label: "GitHub", image: "/github.png", href: "https://github.com/Rishu-xd" },
-  { label: "X", icon: "X", href: "https://x.com" },
+  { label: "X", icon: "X", href: "https://x.com/@Rishu_XD_0" },
   { label: "LinkedIn", image: "/linkedin.png", href: "https://linkedin.com" },
   { label: "Email", image: "/gmailnew.png", href: "mailto:rishu99xd@gmail.com" },
+];
+
+const techStack = [
+  { label: "TypeScript", image: "/skills/typescript.png" },
+  { label: "React", image: "/skills/react.png" },
+  { label: "Next.js", image: "/skills/next-js.png" },
+  { label: "Tailwind CSS", image: "/skills/tailwindcss.png" },
+  { label: "Node.js", image: "/skills/nodejs.png" },
+  { label: "Python", image: "/skills/python.png" },
+  { label: "C++", image: "/skills/cpp.png" },
 ];
 
 type ContributionData = {
@@ -16,6 +26,15 @@ type ContributionData = {
   total: number;
   year: number;
   cells: { date: string; level: number }[];
+};
+
+type SpotifyTrack = {
+  isPlaying: boolean;
+  title?: string;
+  artist?: string;
+  album?: string;
+  albumImageUrl?: string;
+  songUrl?: string;
 };
 
 const fadeUp = {
@@ -26,8 +45,10 @@ const fadeUp = {
 export default function Page() {
   const shouldReduceMotion = useReducedMotion();
   const [selectedYear, setSelectedYear] = useState(2026);
+  const [isYearMenuOpen, setIsYearMenuOpen] = useState(false);
   const [contributions, setContributions] = useState<ContributionData | null>(null);
   const [contributionError, setContributionError] = useState(false);
+  const [spotifyTrack, setSpotifyTrack] = useState<SpotifyTrack | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -47,6 +68,19 @@ export default function Page() {
 
     return () => controller.abort();
   }, [selectedYear]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch("/api/spotify-now-playing", { signal: controller.signal })
+      .then((response) => response.json() as Promise<SpotifyTrack>)
+      .then(setSpotifyTrack)
+      .catch((error: Error) => {
+        if (error.name !== "AbortError") setSpotifyTrack({ isPlaying: false });
+      });
+
+    return () => controller.abort();
+  }, []);
 
   const contributionMonths = contributions
     ? Array.from(new Set(contributions.cells.map((cell) => new Date(`${cell.date}T00:00:00`).toLocaleString("en-US", { month: "short" }))))
@@ -85,12 +119,17 @@ export default function Page() {
         variants={{ visible: { transition: { staggerChildren: shouldReduceMotion ? 0 : 0.08 } } }}
       >
         <motion.header className="flex items-center gap-4" variants={fadeUp} transition={{ duration: 0.65 }}>
-          <motion.div 
-            className=" grid size-16 border-1 border-green-200 shrink-0 place-items-center rounded-[17px] bg-[url('/images/hero.jpg')] bg-cover bg-center text-2xl font-bold shadow-[0_0_30px_rgba(174,20,136,0.16)] sm:size-[64px]"
-            whileHover={shouldReduceMotion ? undefined : { scale: 1.05 }}
+          <motion.div
+            className="grid size-16  cursor-pointer shrink-0 place-items-center overflow-hidden rounded-[17px] border border-gray-200 shadow-[0_0_30px_rgba(174,20,136,0.16)] sm:size-[64px]"
+            whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}
             transition={{ type: "spring", stiffness: 300, damping: 18 }}
           >
-            
+            <motion.div
+              className="size-14 rounded-[14px] bg-[url('/images/hero.jpg')] bg-cover bg-center"
+              whileHover={shouldReduceMotion ? undefined : { scale: 1.03 }}
+              transition={{ type: "spring", stiffness: 300, damping: 18 }}
+            >
+            </motion.div>
           </motion.div>
           <div>
             <h1 className="text-[28px] font-semibold leading-none tracking-[-0.04em] text-white sm:text-[31px]">Akhand Veer Singh</h1>
@@ -108,9 +147,16 @@ export default function Page() {
           I build end-to-end web products, paying attention to the small details that make software feel polished and effortless to use. Currently working with <strong className="font-medium text-white/75">TypeScript, React, Next.js, Tailwind CSS.</strong>
         </motion.p>
 
-        <motion.div className="mt-8 flex items-center gap-2 text-[13px] text-white/35" variants={fadeUp} transition={{ duration: 0.65 }}>
-          <span className="grid size-4 place-items-center rounded-full bg-[#1ed760] text-[10px] text-black">●</span>
-          Not listening to Spotify right now.
+        <motion.div className="mt-8 flex min-h-10 items-center gap-3 text-[13px] text-white/35" variants={fadeUp} transition={{ duration: 0.65 }}>
+          <Image src="/spotify.png" alt="Spotify" width={20} height={20} className="size-5 object-contain" />
+          {spotifyTrack?.isPlaying && spotifyTrack.songUrl ? (
+            <a className="min-w-0 transition-colors hover:text-white" href={spotifyTrack.songUrl} target="_blank" rel="noreferrer">
+              <span className="block text-[11px] uppercase tracking-[0.12em] text-[#1ed760]">Listening on Spotify</span>
+              <span className="mt-0.5 block truncate text-white/65">{spotifyTrack.title} · {spotifyTrack.artist}</span>
+            </a>
+          ) : (
+            <span>Not listening to Spotify right now.</span>
+          )}
         </motion.div>
 
         <motion.div className="mt-7 flex items-center gap-5" variants={fadeUp} transition={{ duration: 0.65 }}>
@@ -144,18 +190,40 @@ export default function Page() {
               Contribution settings
               <span aria-hidden="true">▾</span>
             </label>
-            <select
-              id="contribution-year"
-              value={selectedYear}
-              onChange={(event) => {
-                setContributions(null);
-                setContributionError(false);
-                setSelectedYear(Number(event.target.value));
-              }}
-              className="rounded-md border border-[#2674df] bg-[#2674df] px-4 py-2 text-[13px] font-medium text-white outline-none transition-colors hover:bg-[#347fe5]"
-            >
-              {[2026, 2025, 2024, 2023].map((year) => <option key={year} value={year} className="bg-[#10151b] text-white">{year}</option>)}
-            </select>
+            <div className="relative">
+              <button
+                id="contribution-year"
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={isYearMenuOpen}
+                onClick={() => setIsYearMenuOpen((open) => !open)}
+                className="flex min-w-[92px] items-center justify-between gap-4 rounded-lg border border-white/[0.12] bg-white/[0.06] px-3.5 py-2 text-[13px] font-medium text-white transition-colors hover:border-white/25 hover:bg-white/[0.1]"
+              >
+                {selectedYear}
+                <span className={`text-[11px] text-white/45 transition-transform ${isYearMenuOpen ? "rotate-180" : ""}`} aria-hidden="true">⌄</span>
+              </button>
+              {isYearMenuOpen && (
+                <div className="absolute right-0 z-20 mt-2 min-w-full overflow-hidden rounded-lg border border-white/[0.12] bg-[#17191b] p-1 shadow-[0_12px_30px_rgba(0,0,0,0.4)]" role="listbox" aria-label="Contribution year">
+                  {[2026, 2025, 2024, 2023].map((year) => (
+                    <button
+                      key={year}
+                      type="button"
+                      role="option"
+                      aria-selected={selectedYear === year}
+                      onClick={() => {
+                        setContributions(null);
+                        setContributionError(false);
+                        setSelectedYear(year);
+                        setIsYearMenuOpen(false);
+                      }}
+                      className={`block w-full rounded-md px-3 py-2 text-left text-[13px] transition-colors hover:bg-white/[0.1] ${selectedYear === year ? "bg-[#2674df] text-white" : "text-white/65"}`}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           {contributions ? (
             <>
@@ -199,7 +267,12 @@ export default function Page() {
         <motion.section id="projects" className="mt-16 border-t border-white/[0.06] pt-6" variants={fadeUp} transition={{ duration: 0.65 }}>
           <p className="text-[12px] font-semibold tracking-[0.14em] text-white/45">TECH STACK</p>
           <div className="mt-5 flex flex-wrap gap-2" id="blogs">
-            {["TypeScript", "React", "Next.js", "Tailwind CSS", "Node.js", "Python", "C++"].map((tech) => <span key={tech} className="rounded-md border border-white/[0.08] px-3 py-1.5 text-xs text-white/50">{tech}</span>)}
+            {techStack.map((tech) => (
+              <span key={tech.label} className="inline-flex items-center gap-2 rounded-md border border-white/[0.08] px-3 py-1.5 text-xs text-white/60">
+                <Image src={tech.image} alt="" width={16} height={16} className="size-4 object-contain" />
+                {tech.label}
+              </span>
+            ))}
           </div>
         </motion.section>
       </motion.div>
