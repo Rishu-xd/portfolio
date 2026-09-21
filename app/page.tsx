@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import Projects from "./sections/projects";
 
 const socials = [
   { label: "GitHub", image: "/github.png", href: "https://github.com/Rishu-xd" },
@@ -265,7 +266,9 @@ export default function Page() {
           )}
         </motion.section>
 
-        <motion.section id="projects" className="mt-16 border-t border-white/[0.06] pt-6" variants={fadeUp} transition={{ duration: 0.65 }}>
+        
+
+        <motion.section className="mt-16 border-t border-white/[0.06] pt-6" variants={fadeUp} transition={{ duration: 0.65 }}>
           <p className="text-[12px] font-semibold tracking-[0.14em] text-white/45">TECH STACK</p>
           <div className="mt-5 flex flex-wrap gap-2" id="blogs">
             {techStack.map((tech) => (
@@ -276,9 +279,13 @@ export default function Page() {
             ))}
           </div>
         </motion.section>
+        <Projects />
       </motion.div>
+      
     </main>
   );
+
+  
 }
 
 function Info({ label, value, icon }: { label: string; value: string; icon: string }) {
