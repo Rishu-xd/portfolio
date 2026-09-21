@@ -6,10 +6,10 @@ const projects = [
 		href: "https://www.betterclock.xyz",
 	},
 	{
-		title: "GitHub Activity",
-		description: "A contribution explorer with year selection, responsive scrolling, and graceful API fallbacks.",
+		title: "DoLog",
+		description: "DoLog is a productivity app that helps users organize tasks, stay consistent, and track progress. It features a dashboard, calendar, to-do list, profile, and a GitHub-style activity heatmap to visualize daily productivity and encourage better habits.",
 		tags: ["GitHub API", "React", "Motion"],
-		href: "https://github.com/Rishu-xd",
+		href: "https://github.com/Rishu-xd/DoLog.git",
 	},
 	{
 		title: "Now Playing",
