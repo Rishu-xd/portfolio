@@ -1,298 +1,168 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import Projects from "./sections/projects";
+import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 
-const socials = [
-  { label: "GitHub", image: "/github.png", href: "https://github.com/Rishu-xd" },
-  { label: "X", icon: "X", href: "https://x.com/@Rishu_XD_0" },
-  { label: "LinkedIn", image: "/linkedin.png", href: "https://linkedin.com" },
-  { label: "Email", image: "/gmailnew.png", href: "mailto:rishu99xd@gmail.com" },
-];
-
-const techStack = [
-  { label: "TypeScript", image: "/skills/typescript.png" },
-  { label: "React", image: "/skills/react.png" },
-  { label: "Next.js", image: "/skills/next-js.png" },
-  { label: "Tailwind CSS", image: "/skills/tailwindcss.png" },
-  { label: "Node.js", image: "/skills/nodejs.png" },
-  { label: "Python", image: "/skills/python.png" },
-  { label: "C++", image: "/skills/cpp.png" },
-  { label: "Supabase", image: "/skills/supabase.png" },
-];
-
-type ContributionData = {
-  username: string;
-  total: number;
-  year: number;
-  cells: { date: string; level: number }[];
-};
-
-type SpotifyTrack = {
-  isPlaying: boolean;
-  title?: string;
-  artist?: string;
-  album?: string;
-  albumImageUrl?: string;
-  songUrl?: string;
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 18 },
-  visible: { opacity: 1, y: 0 },
-};
+const sections = ["home", "personal", "projects", "contact"] as const;
+type SectionId = (typeof sections)[number];
 
 export default function Page() {
   const shouldReduceMotion = useReducedMotion();
-  const [selectedYear, setSelectedYear] = useState(2026);
-  const [isYearMenuOpen, setIsYearMenuOpen] = useState(false);
-  const [contributions, setContributions] = useState<ContributionData | null>(null);
-  const [contributionError, setContributionError] = useState(false);
-  const [spotifyTrack, setSpotifyTrack] = useState<SpotifyTrack | null>(null);
+  const [activeSection, setActiveSection] = useState<SectionId>("home");
+  const [dialRotation, setDialRotation] = useState(0);
+  const dialRotationRef = useRef(0);
 
   useEffect(() => {
-    const controller = new AbortController();
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
 
-    fetch(`/api/github-contributions?year=${selectedYear}`, { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) throw new Error("Unable to load contributions");
-        return response.json() as Promise<ContributionData>;
-      })
-      .then((data) => {
-        setContributionError(false);
-        setContributions(data);
-      })
-      .catch((error: Error) => {
-        if (error.name !== "AbortError") setContributionError(true);
-      });
+      const nextRotation = Math.max(0, Math.min((sections.length - 1) * 90, dialRotationRef.current + event.deltaY * 0.35));
+      dialRotationRef.current = nextRotation;
+      setDialRotation(nextRotation);
+      setActiveSection(sections[Math.round(nextRotation / 90)]);
+    };
 
-    return () => controller.abort();
-  }, [selectedYear]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetch("/api/spotify-now-playing", { signal: controller.signal })
-      .then((response) => response.json() as Promise<SpotifyTrack>)
-      .then(setSpotifyTrack)
-      .catch((error: Error) => {
-        if (error.name !== "AbortError") setSpotifyTrack({ isPlaying: false });
-      });
-
-    return () => controller.abort();
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    return () => window.removeEventListener("wheel", handleWheel);
   }, []);
 
-  const contributionMonths = contributions
-    ? Array.from(new Set(contributions.cells.map((cell) => new Date(`${cell.date}T00:00:00`).toLocaleString("en-US", { month: "short" }))))
-    : [];
+  const navigateTo = (sectionId: SectionId) => {
+    const nextRotation = sections.indexOf(sectionId) * 90;
+    dialRotationRef.current = nextRotation;
+    setDialRotation(nextRotation);
+    setActiveSection(sectionId);
+  };
+
+  const sectionState = (sectionId: SectionId) => activeSection === sectionId;
 
   return (
-    <main className="min-h-screen bg-[#090909] px-5 pb-24 text-[#e8e8e8] sm:px-8">
-      <motion.nav
-        className="mx-auto flex h-14 max-w-[790px] items-center justify-between border-b border-white/[0.035] text-[13px] text-white/45"
-        initial={shouldReduceMotion ? false : { opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <div className="flex items-center gap-6">
-          <a className="text-white transition-colors hover:text-white/70" href="#home">Home</a>
-          <a className="transition-colors hover:text-white" href="#projects">Projects</a>
-          <a className="transition-colors hover:text-white" href="#blogs">Blogs</a>
+    <>
+      <main className="h-svh w-full overflow-hidden bg-[#202020]" aria-label="Portfolio sections">
+        <div className="relative h-full w-full">
+          <motion.section id="home" className="absolute inset-0 z-10 overflow-hidden border border-black bg-[#141414]" animate={sectionState("home") ? { opacity: 1, filter: "blur(0px)" } : { opacity: 0, filter: "blur(12px)" }} transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeInOut" }} style={{ pointerEvents: sectionState("home") ? "auto" : "none" }} aria-labelledby="home-title">
+            <motion.header className="absolute left-14 top-11 flex items-center gap-4" initial={false} animate={sectionState("home") ? { opacity: 1, y: 0 } : { opacity: 0, y: -18 }} transition={{ duration: shouldReduceMotion ? 0 : 0.55, delay: shouldReduceMotion ? 0 : 0.12 }}>
+              <Image src="/images/hero.jpg" alt="Akhand Veer Singh" width={116} height={116} className="size-[116px] rounded-full border-4 border-[#242424] object-cover" />
+              <div>
+                <h1 id="home-title" className="font-serif text-[38px] leading-none tracking-tight text-white">Akhand Veer Singh</h1>
+                <p className="mt-2 text-[20px] text-white">Front end Developer</p>
+              </div>
+            </motion.header>
+
+            <motion.div
+              className="absolute left-14 right-14 top-[255px] max-w-[900px]"
+              initial={false}
+              animate={sectionState("home") ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.55, delay: shouldReduceMotion ? 0 : 0.18 }}
+            >
+              <div className="grid grid-cols-3 gap-8">
+                <div>
+                  <p className="text-[12px] font-semibold tracking-[0.14em] text-white">LOCATION</p>
+                  <p className="mt-4 flex items-center gap-3 text-[16px] text-white"><span className="text-[13px] text-white" aria-hidden="true">⌖</span>India</p>
+                </div>
+                <div>
+                  <p className="text-[12px] font-semibold tracking-[0.14em] text-white">EMAIL</p>
+                  <p className="mt-4 flex items-center gap-3 text-[16px] text-white"><span className="text-[13px] text-white" aria-hidden="true">✉</span>rishu99xd@gmail.com</p>
+                </div>
+                <div>
+                  <p className="text-[12px] font-semibold tracking-[0.14em] text-white">PRONOUNS</p>
+                  <p className="mt-4 flex items-center gap-3 text-[16px] text-white"><span className="text-[13px] text-white" aria-hidden="true">♙</span>he/him</p>
+                </div>
+              </div>
+              <p className="mt-10 text-[18px] leading-8 text-white">
+                I build end-to-end web products, paying attention to the small details that make software feel polished and effortless to use. Currently working with <strong className="font-medium text-white">TypeScript, React, Next.js, Tailwind CSS.</strong>
+              </p>
+            </motion.div>
+
+            <motion.nav className="absolute left-15 top-[450px] flex items-center gap-6" initial={false} animate={sectionState("home") ? { opacity: 1, x: 0 } : { opacity: 0, x: -14 }} transition={{ duration: shouldReduceMotion ? 0 : 0.5, delay: shouldReduceMotion ? 0 : 0.22 }} aria-label="Social links">
+              {
+              [["mailto:rishu99xd@gmail.com", "Email", "/gmailnew.png"],
+               ["https://github.com/Rishu-xd", "GitHub", "/github.png"],
+               ["https://linkedin.com", "LinkedIn", "/linkedin.png"],
+               ["https://x.com","X","/x.png"] ].map(([href, label, image]) => (
+                <motion.a key={label} href={href} target={href.startsWith("http") ? "_blank" : undefined} rel={href.startsWith("http") ? "noreferrer" : undefined} aria-label={label} whileHover={shouldReduceMotion ? undefined : { y: -4, scale: 1.12 }} whileTap={shouldReduceMotion ? undefined : { scale: 0.92 }}>
+                  <Image src={image} alt="" width={25} height={25} className="size-[25px] object-contain" />
+                </motion.a>
+              ))}
+            </motion.nav>
+
+            <motion.a href="https://open.spotify.com" target="_blank" rel="noreferrer" className="absolute border-t-sky-100 border-t-1  bottom-[30px] left-[50px] flex h-[66px] w-[193px] items-center gap-2 rounded-full bg-[#454545] px-3" whileHover={shouldReduceMotion ? undefined : { x: 5, backgroundColor: "#505050" }} whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}>
+              <Image src="/spotify.png" alt="Spotify" width={45} height={45} className="size-[45px] object-contain" />
+              <span className="text-[14px] text-white">Currently listing</span>
+            </motion.a>
+          </motion.section>
+
+          <motion.section id="personal" className="absolute inset-0 flex itemcenter justify-center border-y border-black bg-[#181818] px-16" animate={sectionState("personal") ? { opacity: 1, filter: "blur(0px)" } : { opacity: 0, filter: "blur(12px)" }} transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeInOut" }} style={{ pointerEvents: sectionState("personal") ? "auto" : "none" }} aria-labelledby="personal-title">
+            <motion.div className="max-w-[580px] text-center" initial={false} animate={sectionState("personal") ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }} transition={{ duration: shouldReduceMotion ? 0 : 0.6, staggerChildren: shouldReduceMotion ? 0 : 0.08 }}>
+              <motion.p className="text-sm uppercase tracking-[0.3em] text-white">A little about me</motion.p>
+              <motion.h2 id="personal-title" className="mt-5 font-serif text-5xl text-white">Building thoughtful digital spaces.</motion.h2>
+              <motion.p className="mt-6 text-lg leading-8 text-white">I am a frontend developer focused on expressive interfaces, useful motion, and the small details that make products feel natural.</motion.p>
+            </motion.div>
+          </motion.section>
+
+          <motion.section id="projects" className="absolute inset-0 flex items-center justify-center border-y border-black bg-[#141414] px-16" animate={sectionState("projects") ? { opacity: 1, filter: "blur(0px)" } : { opacity: 0, filter: "blur(12px)" }} transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeInOut" }} style={{ pointerEvents: sectionState("projects") ? "auto" : "none" }} aria-labelledby="projects-title">
+            <div className="w-full max-w-[760px]">
+              <motion.p initial={false} animate={sectionState("projects") ? { opacity: 1, x: 0 } : { opacity: 0, x: -18 }} transition={{ duration: shouldReduceMotion ? 0 : 0.5 }} className="text-sm uppercase tracking-[0.3em] text-white">Selected work</motion.p>
+              <motion.h2 id="projects-title" initial={false} animate={sectionState("projects") ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }} transition={{ duration: shouldReduceMotion ? 0 : 0.5, delay: shouldReduceMotion ? 0 : 0.08 }} className="mt-4 font-serif text-5xl text-white">Projects</motion.h2>
+              <motion.div className="mt-10 grid grid-cols-3 gap-4" initial={false} animate={sectionState("projects") ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }} transition={{ duration: shouldReduceMotion ? 0 : 0.6, delay: shouldReduceMotion ? 0 : 0.15 }}>
+                {[['Betterclock', 'A focused timer for getting things done.'], ['DoLog', 'A productivity space for consistent progress.'], ['Now Playing', 'A small Spotify integration for the page.']].map(([title, description]) => (
+                  <motion.article key={title} className="min-h-[180px] border border-[#394139] bg-[#1b1b1b] p-5" whileHover={shouldReduceMotion ? undefined : { y: -8, borderColor: "#72f257" }} transition={{ duration: 0.2 }}>
+                    <h3 className="text-lg text-white">{title}</h3>
+                    <p className="mt-4 text-sm leading-6 text-white">{description}</p>
+                  </motion.article>
+                ))}
+              </motion.div>
+            </div>
+          </motion.section>
+
+          <motion.section id="contact" className="absolute inset-0 flex items-center justify-center border-y border-black bg-[#181818] px-16" animate={sectionState("contact") ? { opacity: 1, filter: "blur(0px)" } : { opacity: 0, filter: "blur(12px)" }} transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeInOut" }} style={{ pointerEvents: sectionState("contact") ? "auto" : "none" }} aria-labelledby="contact-title">
+            <motion.div className="text-center" initial={false} animate={sectionState("contact") ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.94 }} transition={{ duration: shouldReduceMotion ? 0 : 0.6 }}>
+              <p className="text-sm uppercase tracking-[0.3em] text-white">Let&apos;s talk</p>
+              <h2 id="contact-title" className="mt-5 font-serif text-5xl text-white">Have a good idea?</h2>
+              <motion.a href="mailto:rishu99xd@gmail.com" className="mt-8 inline-block border-b border-white pb-2 text-lg text-white" whileHover={shouldReduceMotion ? undefined : { color: "#ffffff", letterSpacing: "0.04em" }}>rishu99xd@gmail.com</motion.a>
+            </motion.div>
+          </motion.section>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="hidden h-8 items-center gap-2 rounded-lg border border-white/[0.09] px-3 text-xs text-white/45 transition-colors hover:border-white/20 hover:text-white sm:flex" type="button">
-            <span className="text-sm">⌕</span>
-            Search
-            <kbd className="rounded border border-white/10 px-1.5 py-0.5 text-[10px] text-white/25">Ctrl K</kbd>
-          </button>
-          <button className="grid size-8 place-items-center rounded-lg border border-white/[0.09] text-sm text-white/65 transition-colors hover:border-white/20 hover:text-white" type="button" aria-label="Toggle theme">
-            ◔
-          </button>
-        </div>
+      </main>
+
+      <motion.nav className="group fixed right-8 top-1/2 z-20 flex w-28 -translate-y-1/2 flex-col items-end gap-3 text-[16px]" initial={shouldReduceMotion ? false : { opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: shouldReduceMotion ? 0 : 0.3 }} aria-label="Section navigation">
+        {sections.map((section) => (
+          <motion.button
+            key={section}
+            type="button"
+            onClick={() => navigateTo(section)}
+            className={`relative h-1 w-5 rounded-full border-0 bg-white px-0 outline-none transition-all duration-300 group-hover:h-6 group-hover:w-28 group-hover:rounded-none group-hover:bg-transparent group-hover:px-1 ${activeSection === section ? "-translate-x-3 bg-[#72f257]" : ""}`}
+            whileHover={shouldReduceMotion ? undefined : { x: -4 }}
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
+          >
+            <span className={`absolute right-0 top-1/2 -translate-y-1/2 whitespace-nowrap text-left text-[16px] opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${activeSection === section ? "text-[#72f257]" : "text-white"}`}>
+              {section[0].toUpperCase() + section.slice(1)}
+            </span>
+          </motion.button>
+        ))}
       </motion.nav>
 
-      <motion.div
-        id="home"
-        className="mx-auto max-w-[790px] pt-20 sm:pt-24"
-        initial="hidden"
-        animate="visible"
-        variants={{ visible: { transition: { staggerChildren: shouldReduceMotion ? 0 : 0.08 } } }}
-      >
-        <motion.header className="flex items-center gap-4" variants={fadeUp} transition={{ duration: 0.65 }}>
-          <motion.div
-            className="grid size-16  cursor-pointer shrink-0 place-items-center overflow-hidden rounded-[17px] border border-gray-200 shadow-[0_0_30px_rgba(174,20,136,0.16)] sm:size-[64px]"
-            whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}
-            transition={{ type: "spring", stiffness: 300, damping: 18 }}
-          >
-            <motion.div
-              className="size-14 rounded-[14px] bg-[url('/images/hero.jpg')] bg-cover bg-center"
-              whileHover={shouldReduceMotion ? undefined : { scale: 1.03 }}
-              transition={{ type: "spring", stiffness: 300, damping: 18 }}
-            >
-            </motion.div>
-          </motion.div>
-          <div>
-            <h1 className="text-[28px] font-semibold leading-none tracking-[-0.04em] text-white sm:text-[31px]">Akhand Veer Singh</h1>
-            <p className="mt-2 text-[14px] text-white/40">Full-Stack Developer</p>
-          </div>
-        </motion.header>
-
-        <motion.div className="mt-11 grid grid-cols-2 gap-y-6 sm:grid-cols-3 sm:gap-x-16" variants={fadeUp} transition={{ duration: 0.65 }}>
-          <Info label="LOCATION" value="India" icon="⌖" />
-          <Info label="EMAIL" value="rishu99xd@gmail.com" icon="✉" />
-          <Info label="PRONOUNS" value="he/him" icon="♙" />
+      <motion.div className="fixed bottom-0 left-1/2 z-20 aspect-square w-[min(360px,42vw)] -translate-x-1/2 translate-y-[65%]" initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: shouldReduceMotion ? 0 : 0.2 }} aria-label="Portfolio navigation">
+          <motion.div className="absolute inset-0" animate={{ rotate: dialRotation }} transition={{ duration: shouldReduceMotion ? 0 : 0.12, ease: "linear" }}>
+          <div className="pointer-events-none absolute inset-0 rounded-full border-2 border-dashed border-[rgb(45_113_69_/_75%)]" aria-hidden="true" />
+          <motion.button type="button" onClick={() => navigateTo("home")} className={`pointer-events-auto absolute left-1/2 top-[-36px] -translate-x-1/2 border-0 bg-transparent text-[16px] ${activeSection === "home" ? "text-[#72f257]" : "text-white"}`} whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}>
+            <span className="absolute left-1/2 top-[23px] size-[17px] -translate-x-1/2 rounded-full bg-[#72f257]" aria-hidden="true" />
+            <motion.span className="inline-block" animate={{ rotate: -dialRotation }}>Home</motion.span>
+          </motion.button>
+          <motion.button type="button" onClick={() => navigateTo("personal")} className={`pointer-events-auto absolute left-[-38px] top-[18%] border-0 bg-transparent text-[16px] ${activeSection === "personal" ? "text-[#72f257]" : "text-white"}`} whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}>
+            <span className="absolute left-[66px] top-[5px] size-[17px] rounded-full bg-[#72f257]" aria-hidden="true" />
+            <motion.span className="inline-block" animate={{ rotate: -dialRotation }}>Personal</motion.span>
+          </motion.button>
+          <motion.button type="button" onClick={() => navigateTo("projects")} className={`pointer-events-auto absolute right-[-47px] top-[18%] border-0 bg-transparent text-[16px] ${activeSection === "projects" ? "text-[#72f257]" : "text-white"}`} whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}>
+            <span className="absolute right-[67px] top-[5px] size-[17px] rounded-full bg-[#72f257]" aria-hidden="true" />
+            <motion.span className="inline-block" animate={{ rotate: -dialRotation }}>Projects</motion.span>
+          </motion.button>
+          <motion.button type="button" onClick={() => navigateTo("contact")} className={`pointer-events-auto absolute bottom-[-26px] left-1/2 -translate-x-1/2 border-0 bg-transparent text-[16px] ${activeSection === "contact" ? "text-[#72f257]" : "text-white"}`} whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}>
+            <span className="absolute bottom-[23px] left-1/2 size-[17px] -translate-x-1/2 rounded-full bg-[#72f257]" aria-hidden="true" />
+            <motion.span className="inline-block" animate={{ rotate: -dialRotation }}>Contact</motion.span>
+          </motion.button>
         </motion.div>
-
-        <motion.p className="mt-8 max-w-[735px] text-[15px] leading-7 text-white/55 sm:text-[16px]" variants={fadeUp} transition={{ duration: 0.65 }}>
-          I build end-to-end web products, paying attention to the small details that make software feel polished and effortless to use. Currently working with <strong className="font-medium text-white/75">TypeScript, React, Next.js, Tailwind CSS.</strong>
-        </motion.p>
-
-        <motion.div className="mt-8 flex min-h-10 items-center gap-3 text-[13px] text-white/35" variants={fadeUp} transition={{ duration: 0.65 }}>
-          <Image src="/spotify.png" alt="Spotify" width={20} height={20} className="size-5 object-contain" />
-          {spotifyTrack?.isPlaying && spotifyTrack.songUrl ? (
-            <a className="min-w-0 transition-colors hover:text-white" href={spotifyTrack.songUrl} target="_blank" rel="noreferrer">
-              <span className="block text-[11px] uppercase tracking-[0.12em] text-[#1ed760]">Listening on Spotify</span>
-              <span className="mt-0.5 block truncate text-white/65">{spotifyTrack.title} · {spotifyTrack.artist}</span>
-            </a>
-          ) : (
-            <span>Not listening to Spotify right now.</span>
-          )}
-        </motion.div>
-
-        <motion.div className="mt-7 flex items-center gap-5" variants={fadeUp} transition={{ duration: 0.65 }}>
-          {socials.map((social) => (
-            <motion.a
-              key={social.label}
-              href={social.href}
-              aria-label={social.label}
-              className="text-[15px] font-semibold text-white/55 transition-colors hover:text-white"
-              whileHover={shouldReduceMotion ? undefined : { y: -3, scale: 1.12 }}
-              whileTap={shouldReduceMotion ? undefined : { scale: 0.92 }}
-            >
-              {social.image ? (
-                <Image
-                  src={social.image}
-                  alt=""
-                  width={22}
-                  height={22}
-                  className="size-[22px] object-contain"
-                />
-              ) : (
-                social.icon
-              )}
-            </motion.a>
-          ))}
-        </motion.div>
-
-        <motion.section className="mt-12 overflow-hidden" variants={fadeUp} transition={{ duration: 0.65 }} aria-label="Contribution activity">
-          <div className="mb-5 flex items-center justify-between">
-            <label className="flex items-center gap-2 text-[12px] text-white/50" htmlFor="contribution-year">
-              Contribution settings
-              <span aria-hidden="true">▾</span>
-            </label>
-            <div className="relative">
-              <button
-                id="contribution-year"
-                type="button"
-                aria-haspopup="listbox"
-                aria-expanded={isYearMenuOpen}
-                onClick={() => setIsYearMenuOpen((open) => !open)}
-                className="flex min-w-[92px] items-center justify-between gap-4 rounded-lg border border-white/[0.12] bg-white/[0.06] px-3.5 py-2 text-[13px] font-medium text-white transition-colors hover:border-white/25 hover:bg-white/[0.1]"
-              >
-                {selectedYear}
-                <span className={`text-[11px] text-white/45 transition-transform ${isYearMenuOpen ? "rotate-180" : ""}`} aria-hidden="true">⌄</span>
-              </button>
-              {isYearMenuOpen && (
-                <div className="absolute right-0 z-20 mt-2 min-w-full overflow-hidden rounded-lg border border-white/[0.12] bg-[#17191b] p-1 shadow-[0_12px_30px_rgba(0,0,0,0.4)]" role="listbox" aria-label="Contribution year">
-                  {[2026, 2025, 2024, 2023].map((year) => (
-                    <button
-                      key={year}
-                      type="button"
-                      role="option"
-                      aria-selected={selectedYear === year}
-                      onClick={() => {
-                        setContributions(null);
-                        setContributionError(false);
-                        setSelectedYear(year);
-                        setIsYearMenuOpen(false);
-                      }}
-                      className={`block w-full rounded-md px-3 py-2 text-left text-[13px] transition-colors hover:bg-white/[0.1] ${selectedYear === year ? "bg-[#2674df] text-white" : "text-white/65"}`}
-                    >
-                      {year}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-          {contributions ? (
-            <>
-              <div className="mb-2 flex min-w-[660px] items-center justify-between px-0.5 text-[12px] font-semibold text-white/75">
-                {contributionMonths.map((month, index) => <span key={`${month}-${index}`}>{month}</span>)}
-                <a className="ml-4 flex shrink-0 items-center gap-2 text-white/45 transition-colors hover:text-white" href="https://github.com/Rishu-xd" aria-label="View GitHub profile">
-                  <Image src="/github.png" alt="" width={16} height={16} className="size-4 object-contain" />
-                  GitHub
-                </a>
-              </div>
-              <div className="contribution-scroll overflow-x-auto pb-2">
-                <div className="contribution-grid grid grid-flow-col grid-rows-7">
-                  {contributions.cells.map((cell) => (
-                    <motion.span
-                      key={cell.date}
-                      className={`contribution-cell level-${cell.level}`}
-                      initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.6 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      whileHover={cell.level === 0 || shouldReduceMotion ? undefined : { scale: 1.65, zIndex: 10 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: shouldReduceMotion ? 0 : 0.0015, duration: 0.28, type: "spring", stiffness: 420, damping: 22 }}
-                      title={`${cell.date}: GitHub contribution level ${cell.level}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : (
-            <p className="h-[108px] pt-10 text-sm text-white/35">
-              {contributionError ? "GitHub activity is unavailable right now." : "Loading GitHub activity..."}
-            </p>
-          )}
-          {contributions && (
-            <div className="mt-2 flex items-center justify-between text-[12px] text-white/70">
-              <span><strong className="font-semibold text-white">{contributions.total}</strong> Contributions · {contributions.year}</span>
-              <span className="hidden items-center gap-1.5 sm:flex">Less <i className="contribution-cell level-0" /><i className="contribution-cell level-1" /><i className="contribution-cell level-2" /><i className="contribution-cell level-3" /><i className="contribution-cell level-4" /> More</span>
-            </div>
-          )}
-        </motion.section>
-
-        
-
-        <motion.section className="mt-16 border-t border-white/[0.06] pt-6" variants={fadeUp} transition={{ duration: 0.65 }}>
-          <p className="text-[12px] font-semibold tracking-[0.14em] text-white/45">TECH STACK</p>
-          <div className="mt-5 flex flex-wrap gap-2" id="blogs">
-            {techStack.map((tech) => (
-              <span key={tech.label} className="inline-flex items-center gap-2 rounded-md border border-white/[0.08] px-3 py-1.5 text-xs text-white/60">
-                <Image src={tech.image} alt="" width={16} height={16} className="size-4 object-contain" />
-                {tech.label}
-              </span>
-            ))}
-          </div>
-        </motion.section>
-        <Projects />
       </motion.div>
-      
-    </main>
-  );
-
-  
-}
-
-function Info({ label, value, icon }: { label: string; value: string; icon: string }) {
-  return (
-    <div>
-      <p className="mb-2 text-[11px] font-semibold tracking-[0.14em] text-white/45">{label}</p>
-      <p className="flex items-center gap-2 whitespace-nowrap text-[14px] text-white/70"><span className="text-white/45">{icon}</span>{value}</p>
-    </div>
+    </>
   );
 }
