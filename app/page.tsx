@@ -11,6 +11,7 @@ type SpotifyNowPlaying = {
   isPlaying: boolean;
   title?: string;
   artist?: string;
+  albumImageUrl?: string;
   songUrl?: string;
 };
 
@@ -145,7 +146,7 @@ export default function Page() {
             </motion.nav>
 
             <motion.a href={nowPlaying.songUrl ?? "https://open.spotify.com"} target="_blank" rel="noreferrer" className="absolute border-t-sky-100 border-t-1 bottom-[30px] left-[50px] flex h-[66px] w-[193px] items-center gap-2 rounded-full bg-[#454545] px-3" whileHover={shouldReduceMotion ? undefined : { x: 5, backgroundColor: "#505050" }} whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}>
-              <Image src="/spotify.png" alt="Spotify" width={45} height={45} className="size-[45px] object-contain" />
+              <Image src={nowPlaying.isPlaying && nowPlaying.albumImageUrl ? nowPlaying.albumImageUrl : "/spotify.png"} alt={nowPlaying.isPlaying ? `${nowPlaying.title} album artwork` : "Spotify"} width={45} height={45} className="size-[45px] rounded-md object-cover" />
               <span className="min-w-0 text-[12px] text-white" aria-live="polite">
                 {nowPlaying.isPlaying ? <><span className="block truncate">{nowPlaying.title}</span><span className="block truncate text-white/60">{nowPlaying.artist}</span></> : "Not playing"}
               </span>
