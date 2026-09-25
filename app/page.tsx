@@ -114,7 +114,7 @@ export default function Page() {
               animate={sectionState("home") ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
               transition={{ duration: shouldReduceMotion ? 0 : 0.55, delay: shouldReduceMotion ? 0 : 0.18 }}
             >
-              <div className="grid grid-cols-3 gap-8">
+              <div className="grid grid-cols-3 gap-8 opacity-40">
                 <div>
                   <p className="text-[12px] font-semibold tracking-[0.14em] text-white">LOCATION</p>
                   <p className="mt-4 flex items-center gap-3 text-[16px] text-white"><span className="text-[13px] text-white" aria-hidden="true">⌖</span>India</p>
@@ -128,7 +128,7 @@ export default function Page() {
                   <p className="mt-4 flex items-center gap-3 text-[16px] text-white"><span className="text-[13px] text-white" aria-hidden="true">♙</span>he/him</p>
                 </div>
               </div>
-              <p className="mt-10 text-[18px] leading-8 text-white">
+              <p className="mt-10 text-[18px] leading-8 text-gray-400">
                 I build end-to-end web products, paying attention to the small details that make software feel polished and effortless to use. Currently working with <strong className="font-medium text-white">TypeScript, React, Next.js, Tailwind CSS.</strong>
               </p>
             </motion.div>
@@ -145,15 +145,17 @@ export default function Page() {
               ))}
             </motion.nav>
 
-            <motion.a href={nowPlaying.songUrl ?? "https://open.spotify.com"} target="_blank" rel="noreferrer" className="group absolute bottom-[30px] left-[50px] flex h-[66px] w-[193px] items-center gap-2 overflow-hidden rounded-full border-t-1 border-t-sky-100 bg-[#454545] px-3 group-hover:flex-col group-hover:items-start group-hover:justify-end" whileHover={shouldReduceMotion ? undefined : { x: 5, height: 155, borderRadius: 22, backgroundColor: "#454545" }} whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }} transition={{ type: "spring", stiffness: 280, damping: 18 }}>
-              <motion.span className="absolute left-3 top-3 z-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100" aria-hidden="true">
-                <Image src="/spotify.png" alt="" width={24} height={24} className="size-6 object-contain" />
-              </motion.span>
-              <motion.span className="relative block size-[45px] shrink-0 overflow-hidden rounded-md transition-all duration-300 group-hover:absolute group-hover:left-1/2 group-hover:top-3 group-hover:size-[100px] group-hover:-translate-x-1/2">
-                <Image src={nowPlaying.isPlaying && nowPlaying.albumImageUrl ? nowPlaying.albumImageUrl : "/spotify.png"} alt={nowPlaying.isPlaying ? `${nowPlaying.title} album artwork` : "Spotify"} fill className="object-cover" />
-              </motion.span>
-              <span className="min-w-0 text-[12px] text-white" aria-live="polite">
-                {nowPlaying.isPlaying ? <><span className="block truncate">{nowPlaying.title}</span><span className="block truncate text-white/60">{nowPlaying.artist}</span></> : "Not playing"}
+            <motion.a href={nowPlaying.songUrl ?? "https://open.spotify.com"} target="_blank" rel="noreferrer" className="group absolute bottom-[30px] left-[50px] flex h-[66px] w-[193px] items-center overflow-hidden rounded-full   bg-[#454545] px-3" whileHover={shouldReduceMotion ? undefined : { x: 5, width: 340, height: 140, borderRadius: 22, backgroundColor: "transparent" }} whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }} transition={{ type: "spring", stiffness: 280, damping: 50 }}>
+              <span className="relative flex h-full w-full items-center gap-2 rounded-full transition-all duration-300 group-hover:absolute group-hover:left-1/2 group-hover:top-1/2 group-hover:h-[90px] group-hover:w-[300px] group-hover:-translate-x-1/2 group-hover:-translate-y-1/2 group-hover:rounded-[16px] group-hover:bg-[#dedede] group-hover:px-3">
+                <motion.span className="absolute  top-1/2 z-10 -translate-y-1/2 transition-all duration-300 group-hover:top-3 group-hover:translate-y-0" aria-hidden="true">
+                  <Image src="/spotify.png" alt="" width={45} height={45} className="size-[45px]  justify-between transition-all  duration-300 group-hover:size-6" />
+                </motion.span>
+                <motion.span className="pointer-events-none absolute right-3 top-1/2 size-[60px] -translate-y-1/2 overflow-hidden rounded-md opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <Image src={nowPlaying.isPlaying && nowPlaying.albumImageUrl ? nowPlaying.albumImageUrl : "/spotify.png"} alt={nowPlaying.isPlaying ? `${nowPlaying.title} album artwork` : "Spotify"} fill className="object-cover" />
+                </motion.span>
+                <span className="min-w-0 pl-[58px] text-[12px] text-white transition-colors duration-300 group-hover:pr-[68px] group-hover:text-[#5b5b5b]" aria-live="polite">
+                  {nowPlaying.isPlaying ? <><span className="block truncate">{nowPlaying.title}</span><span className="block truncate text-white/60 group-hover:text-[#929292]">{nowPlaying.artist}</span></> : "Not playing"}
+                </span>
               </span>
             </motion.a>
           </motion.section>
