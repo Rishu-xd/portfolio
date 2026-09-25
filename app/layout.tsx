@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Motion",
+  title: "Torfinn",
   description: "The portfolio of Akhand Veer Singh, a full-stack developer building digital matter that moves.",
 };
 

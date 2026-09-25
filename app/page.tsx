@@ -1,17 +1,58 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useReducedMotion } from "motion/react";
+import { motion, useReducedMotion , AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 const sections = ["home", "personal", "projects", "contact"] as const;
+const words = ["Fullstack","Product engineer" ];
 type SectionId = (typeof sections)[number];
+type SpotifyNowPlaying = {
+  isPlaying: boolean;
+  title?: string;
+  artist?: string;
+  songUrl?: string;
+};
 
 export default function Page() {
   const shouldReduceMotion = useReducedMotion();
   const [activeSection, setActiveSection] = useState<SectionId>("home");
   const [dialRotation, setDialRotation] = useState(0);
+  const [index, setIndex] = useState(0);
+  const [nowPlaying, setNowPlaying] = useState<SpotifyNowPlaying>({ isPlaying: false });
   const dialRotationRef = useRef(0);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setIndex((currentIndex) => (currentIndex + 1) % words.length);
+    }, 3300);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadNowPlaying = async () => {
+      try {
+        const response = await fetch("/api/spotify-now-playing", { cache: "no-store" });
+        if (!response.ok) return;
+
+        const data = await response.json() as SpotifyNowPlaying;
+        if (!cancelled) setNowPlaying(data);
+      } catch {
+        if (!cancelled) setNowPlaying({ isPlaying: false });
+      }
+    };
+
+    loadNowPlaying();
+    const interval = window.setInterval(loadNowPlaying, 15000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     const handleWheel = (event: WheelEvent) => {
@@ -22,9 +63,11 @@ export default function Page() {
       setDialRotation(nextRotation);
       setActiveSection(sections[Math.round(nextRotation / 90)]);
     };
-
+     
     window.addEventListener("wheel", handleWheel, { passive: false });
     return () => window.removeEventListener("wheel", handleWheel);
+
+    
   }, []);
 
   const navigateTo = (sectionId: SectionId) => {
@@ -35,7 +78,9 @@ export default function Page() {
   };
 
   const sectionState = (sectionId: SectionId) => activeSection === sectionId;
+   
 
+  
   return (
     <>
       <main className="h-svh w-full overflow-hidden bg-[#202020]" aria-label="Portfolio sections">
@@ -45,7 +90,20 @@ export default function Page() {
               <Image src="/images/hero.jpg" alt="Akhand Veer Singh" width={116} height={116} className="size-[116px] rounded-full border-4 border-[#242424] object-cover" />
               <div>
                 <h1 id="home-title" className="font-serif text-[38px] leading-none tracking-tight text-white">Akhand Veer Singh</h1>
-                <p className="mt-2 text-[20px] text-white">Front end Developer</p>
+                <h1 className="overflow-hidden">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={words[index]}
+                      initial={{ y: -20, opacity: 0, filter: "blur(8px)" }}
+                      animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+                      exit={{ y: 0, opacity: 0, filter: "blur(8px)" }}
+                      transition={{ duration: 1 }}
+                      className="inline-block text-gray-400"
+                    >
+                      {words[index]}
+                    </motion.span>
+                  </AnimatePresence>
+                </h1>
               </div>
             </motion.header>
 
@@ -86,9 +144,11 @@ export default function Page() {
               ))}
             </motion.nav>
 
-            <motion.a href="https://open.spotify.com" target="_blank" rel="noreferrer" className="absolute border-t-sky-100 border-t-1  bottom-[30px] left-[50px] flex h-[66px] w-[193px] items-center gap-2 rounded-full bg-[#454545] px-3" whileHover={shouldReduceMotion ? undefined : { x: 5, backgroundColor: "#505050" }} whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}>
+            <motion.a href={nowPlaying.songUrl ?? "https://open.spotify.com"} target="_blank" rel="noreferrer" className="absolute border-t-sky-100 border-t-1 bottom-[30px] left-[50px] flex h-[66px] w-[193px] items-center gap-2 rounded-full bg-[#454545] px-3" whileHover={shouldReduceMotion ? undefined : { x: 5, backgroundColor: "#505050" }} whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}>
               <Image src="/spotify.png" alt="Spotify" width={45} height={45} className="size-[45px] object-contain" />
-              <span className="text-[14px] text-white">Currently listing</span>
+              <span className="min-w-0 text-[12px] text-white" aria-live="polite">
+                {nowPlaying.isPlaying ? <><span className="block truncate">{nowPlaying.title}</span><span className="block truncate text-white/60">{nowPlaying.artist}</span></> : "Not playing"}
+              </span>
             </motion.a>
           </motion.section>
 
