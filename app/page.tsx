@@ -145,9 +145,14 @@ export default function Page() {
               ))}
             </motion.nav>
 
-            <motion.a href={nowPlaying.songUrl ?? "https://open.spotify.com"} target="_blank" rel="noreferrer" className="absolute border-t-sky-100 border-t-1 bottom-[30px] left-[50px] flex h-[66px] w-[193px] items-center gap-2 rounded-full bg-[#454545] px-3" whileHover={shouldReduceMotion ? undefined : { x: 5, backgroundColor: "#505050" }} whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}>
-              <Image src={nowPlaying.isPlaying && nowPlaying.albumImageUrl ? nowPlaying.albumImageUrl : "/spotify.png"} alt={nowPlaying.isPlaying ? `${nowPlaying.title} album artwork` : "Spotify"} width={45} height={45} className="size-[45px] rounded-md object-cover" />
-              <span className="min-w-0 text-[12px] text-white" aria-live="polite">
+            <motion.a href={nowPlaying.songUrl ?? "https://open.spotify.com"} target="_blank" rel="noreferrer" className="group absolute bottom-[30px] left-[50px] flex h-[66px] w-[193px] flex-col justify-center gap-2 overflow-hidden rounded-full border-t-1 border-t-sky-100 bg-[#454545] px-3" whileHover={shouldReduceMotion ? undefined : { x: 5, height: 155, borderRadius: 22, backgroundColor: "#454545" }} whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }} transition={{ type: "spring", stiffness: 280, damping: 18 }}>
+              <motion.span className="absolute left-3 top-3 z-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100" aria-hidden="true">
+                <Image src="/spotify.png" alt="" width={24} height={24} className="size-6 object-contain" />
+              </motion.span>
+              <motion.span className="relative block size-[45px] shrink-0 overflow-hidden rounded-md transition-all duration-300 group-hover:absolute group-hover:left-1/2 group-hover:top-3 group-hover:size-[100px] group-hover:-translate-x-1/2">
+                <Image src={nowPlaying.isPlaying && nowPlaying.albumImageUrl ? nowPlaying.albumImageUrl : "/spotify.png"} alt={nowPlaying.isPlaying ? `${nowPlaying.title} album artwork` : "Spotify"} fill className="object-cover" />
+              </motion.span>
+              <span className="min-w-0 text-[12px] text-white transition-transform duration-300 group-hover:translate-y-[52px]" aria-live="polite">
                 {nowPlaying.isPlaying ? <><span className="block truncate">{nowPlaying.title}</span><span className="block truncate text-white/60">{nowPlaying.artist}</span></> : "Not playing"}
               </span>
             </motion.a>
