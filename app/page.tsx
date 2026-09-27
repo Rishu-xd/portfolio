@@ -3,10 +3,16 @@
 import Image from "next/image";
 import { motion, useReducedMotion , AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import React from "react";
+import AnimatedCursor from "react-animated-cursor"
 
 const sections = ["home", "personal", "projects", "contact"] as const;
 const words = ["Fullstack","Product engineer" ];
+const cursorLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const cursorNumbers = "0123456789";
+const cursorBrackets = "[]{}()";
 type SectionId = (typeof sections)[number];
+type CursorGlyph = { id: number; character: string; tone: "white" | "green"; x: number; y: number };
 type SpotifyNowPlaying = {
   isPlaying: boolean;
   title?: string;
@@ -15,13 +21,51 @@ type SpotifyNowPlaying = {
   songUrl?: string;
 };
 
+function pickCursorCharacter() {
+  const selection = Math.random();
+  const characters = selection < 0.45 ? cursorBrackets : selection < 0.8 ? cursorNumbers : cursorLetters;
+  return characters[Math.floor(Math.random() * characters.length)];
+}
+
 export default function Page() {
   const shouldReduceMotion = useReducedMotion();
   const [activeSection, setActiveSection] = useState<SectionId>("home");
   const [dialRotation, setDialRotation] = useState(0);
   const [index, setIndex] = useState(0);
   const [nowPlaying, setNowPlaying] = useState<SpotifyNowPlaying>({ isPlaying: false });
+  const [cursorGlyphs, setCursorGlyphs] = useState<CursorGlyph[]>([]);
   const dialRotationRef = useRef(0);
+  const cursorGlyphIdRef = useRef(0);
+  const lastGlyphPositionRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      if (shouldReduceMotion || event.pointerType === "touch") return;
+
+      const lastPosition = lastGlyphPositionRef.current;
+      if (lastPosition && Math.hypot(event.clientX - lastPosition.x, event.clientY - lastPosition.y) < 16) return;
+
+      lastGlyphPositionRef.current = { x: event.clientX, y: event.clientY };
+      const glyphs = Array.from({ length: 3 }, () => {
+        const id = cursorGlyphIdRef.current++;
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.sqrt(Math.random()) * 38;
+
+        return {
+          id,
+          character: pickCursorCharacter(),
+          tone: id % 2 === 0 ? "green" as const : "white" as const,
+          x: event.clientX + Math.cos(angle) * radius,
+          y: event.clientY + Math.sin(angle) * radius,
+        };
+      });
+
+      setCursorGlyphs((currentGlyphs) => [...currentGlyphs, ...glyphs].slice(-36));
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    return () => window.removeEventListener("pointermove", handlePointerMove);
+  }, [shouldReduceMotion]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -85,6 +129,39 @@ export default function Page() {
   return (
     <>
       <main className="h-svh w-full overflow-hidden bg-[#202020]" aria-label="Portfolio sections">
+          <AnimatedCursor
+      innerSize={8}
+      outerSize={8}
+      color='255, 255, 255'
+      outerAlpha={0.2}
+      innerScale={0.7}
+      outerScale={5}
+      clickables={[
+        'a',
+        'input[type="text"]',
+        'input[type="email"]',
+        'input[type="number"]',
+        'input[type="submit"]',
+        'input[type="image"]',
+        'label[for]',
+        'select',
+        'textarea',
+        'button',
+        '.link'
+      ]}
+    />
+        <div className="pointer-events-none fixed inset-0 z-[9999] overflow-hidden" aria-hidden="true">
+          {cursorGlyphs.map((glyph) => (
+            <span
+              key={glyph.id}
+              className={`cursor-glyph cursor-glyph--${glyph.tone} absolute text-[14px] font-semibold`}
+              style={{ left: glyph.x, top: glyph.y }}
+              onAnimationEnd={() => setCursorGlyphs((currentGlyphs) => currentGlyphs.filter((item) => item.id !== glyph.id))}
+            >
+              {glyph.character}
+            </span>
+          ))}
+        </div>
         <div className="relative h-full w-full">
           <motion.section id="home" className="absolute inset-0 z-10 overflow-hidden border border-black bg-[#141414]" animate={sectionState("home") ? { opacity: 1, filter: "blur(0px)" } : { opacity: 0, filter: "blur(12px)" }} transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeInOut" }} style={{ pointerEvents: sectionState("home") ? "auto" : "none" }} aria-labelledby="home-title">
             <motion.header className="absolute left-14 top-11 flex items-center gap-4" initial={false} animate={sectionState("home") ? { opacity: 1, y: 0 } : { opacity: 0, y: -18 }} transition={{ duration: shouldReduceMotion ? 0 : 0.55, delay: shouldReduceMotion ? 0 : 0.12 }}>
