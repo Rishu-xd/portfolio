@@ -4,7 +4,6 @@ import Image from "next/image";
 import { motion, useReducedMotion , AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
-import AnimatedCursor from "react-animated-cursor"
 
 const sections = ["home", "personal", "projects", "contact"] as const;
 const words = ["Fullstack","Product engineer" ];
@@ -129,27 +128,6 @@ export default function Page() {
   return (
     <>
       <main className="h-svh w-full overflow-hidden bg-[#202020]" aria-label="Portfolio sections">
-          <AnimatedCursor
-      innerSize={8}
-      outerSize={8}
-      color='255, 255, 255'
-      outerAlpha={0.2}
-      innerScale={0.7}
-      outerScale={5}
-      clickables={[
-        'a',
-        'input[type="text"]',
-        'input[type="email"]',
-        'input[type="number"]',
-        'input[type="submit"]',
-        'input[type="image"]',
-        'label[for]',
-        'select',
-        'textarea',
-        'button',
-        '.link'
-      ]}
-    />
         <div className="pointer-events-none fixed inset-0 z-[9999] overflow-hidden" aria-hidden="true">
           {cursorGlyphs.map((glyph) => (
             <span
