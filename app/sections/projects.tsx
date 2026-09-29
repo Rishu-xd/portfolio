@@ -12,9 +12,9 @@ const projects = [
 		href: "https://github.com/Rishu-xd/DoLog.git",
 	},
 	{
-		title: "Now Playing",
-		description: "A small Spotify integration that surfaces the track currently playing without interrupting the page.",
-		tags: ["Spotify API", "Next.js", "REST"],
+		title: "Qflow",
+		description: "A universal queue-management platform designed to reduce waiting time and manage high-volume queues digitally.",
+		tags: ["Flutter", "Next.js", "REST", "supabase"],
 		href: "/api/spotify-now-playing",
 	},
 ];

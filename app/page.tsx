@@ -5,13 +5,25 @@ import { motion, useReducedMotion , AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 
-const sections = ["home", "personal", "projects", "contact"] as const;
+const sections = ["home", "stats", "projects", "contact"] as const;
 const words = ["Fullstack","Product engineer" ];
 const cursorLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const cursorNumbers = "0123456789";
 const cursorBrackets = "[]{}()";
 type SectionId = (typeof sections)[number];
 type CursorGlyph = { id: number; character: string; tone: "white" | "green"; x: number; y: number };
+type GithubActivity = {
+  username: string;
+  total: number;
+  year: number;
+  cells: { date: string; level: number }[];
+};
+const dialPositions: Record<SectionId, { button: string; marker: string }> = {
+  home: { button: "left-1/2 top-[-36px] -translate-x-1/2", marker: "left-1/2 top-[23px] -translate-x-1/2" },
+  stats: { button: "left-[-38px] top-[18%]", marker: "left-[66px] top-[5px]" },
+  projects: { button: "bottom-[-26px] left-1/2 -translate-x-1/2", marker: "bottom-[23px] left-1/2 -translate-x-1/2" },
+  contact: { button: "right-[-47px] top-[18%]", marker: "right-[67px] top-[5px]" },
+};
 type SpotifyNowPlaying = {
   isPlaying: boolean;
   title?: string;
@@ -32,6 +44,8 @@ export default function Page() {
   const [dialRotation, setDialRotation] = useState(0);
   const [index, setIndex] = useState(0);
   const [nowPlaying, setNowPlaying] = useState<SpotifyNowPlaying>({ isPlaying: false });
+  const [githubActivity, setGithubActivity] = useState<GithubActivity | null>(null);
+  const [githubActivityStatus, setGithubActivityStatus] = useState<"loading" | "ready" | "unavailable">("loading");
   const [cursorGlyphs, setCursorGlyphs] = useState<CursorGlyph[]>([]);
   const dialRotationRef = useRef(0);
   const cursorGlyphIdRef = useRef(0);
@@ -95,6 +109,30 @@ export default function Page() {
     return () => {
       cancelled = true;
       window.clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadGithubActivity = async () => {
+      try {
+        const response = await fetch("/api/github-contributions", { cache: "no-store" });
+        if (!response.ok) throw new Error("GitHub activity unavailable");
+
+        const data = await response.json() as GithubActivity;
+        if (!cancelled) {
+          setGithubActivity(data);
+          setGithubActivityStatus("ready");
+        }
+      } catch {
+        if (!cancelled) setGithubActivityStatus("unavailable");
+      }
+    };
+
+    loadGithubActivity();
+    return () => {
+      cancelled = true;
     };
   }, []);
 
@@ -215,26 +253,80 @@ export default function Page() {
             </motion.a>
           </motion.section>
 
-          <motion.section id="personal" className="absolute inset-0 flex itemcenter justify-center border-y border-black bg-[#181818] px-16" animate={sectionState("personal") ? { opacity: 1, filter: "blur(0px)" } : { opacity: 0, filter: "blur(12px)" }} transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeInOut" }} style={{ pointerEvents: sectionState("personal") ? "auto" : "none" }} aria-labelledby="personal-title">
-            <motion.div className="max-w-[580px] text-center" initial={false} animate={sectionState("personal") ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }} transition={{ duration: shouldReduceMotion ? 0 : 0.6, staggerChildren: shouldReduceMotion ? 0 : 0.08 }}>
-              <motion.p className="text-sm uppercase tracking-[0.3em] text-white">A little about me</motion.p>
-              <motion.h2 id="personal-title" className="mt-5 font-serif text-5xl text-white">Building thoughtful digital spaces.</motion.h2>
-              <motion.p className="mt-6 text-lg leading-8 text-white">I am a frontend developer focused on expressive interfaces, useful motion, and the small details that make products feel natural.</motion.p>
-            </motion.div>
+          <motion.section id="stats" className="absolute inset-0 flex items-center justify-center border-y border-black bg-[#181818] px-6 py-8 sm:px-12" animate={sectionState("stats") ? { opacity: 1, filter: "blur(0px)" } : { opacity: 0, filter: "blur(12px)" }} transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeInOut" }} style={{ pointerEvents: sectionState("stats") ? "auto" : "none" }} aria-labelledby="stats-title">
+            <div className="w-full max-w-[820px]">
+              <motion.p initial={false} animate={sectionState("stats") ? { opacity: 1, x: 0 } : { opacity: 0, x: -12 }} transition={{ duration: shouldReduceMotion ? 0 : 0.45 }} className="text-xs font-medium uppercase tracking-[0.24em] text-white/45">Now / lately</motion.p>
+              <motion.h2 id="stats-title" initial={false} animate={sectionState("stats") ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }} transition={{ duration: shouldReduceMotion ? 0 : 0.45, delay: shouldReduceMotion ? 0 : 0.06 }} className="mt-3 font-serif text-4xl text-white sm:text-5xl">Stats</motion.h2>
+
+              <motion.div className="mt-7 border-y border-white/10 py-5" initial={false} animate={sectionState("stats") ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }} transition={{ duration: shouldReduceMotion ? 0 : 0.45, delay: shouldReduceMotion ? 0 : 0.12 }}>
+                <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-sm font-medium text-white/80">GitHub activity</h3>
+                  {githubActivityStatus === "ready" && githubActivity ? (
+                    <p className="text-xs text-white/40"><span className="text-white/75">{githubActivity.total.toLocaleString()}</span> contributions in {githubActivity.year}</p>
+                  ) : (
+                    <p className="text-xs text-white/40" role="status">{githubActivityStatus === "loading" ? "Loading activity..." : "GitHub activity is unavailable right now."}</p>
+                  )}
+                </div>
+                {githubActivityStatus === "ready" && githubActivity && (
+                  <div className="overflow-x-auto pb-2" aria-label={`${githubActivity.username}'s GitHub contribution activity for ${githubActivity.year}`}>
+                    <div className="grid w-max grid-flow-col grid-rows-7 auto-cols-[9px] gap-[3px]" role="img" aria-label={`${githubActivity.total} contributions in ${githubActivity.year}`}>
+                      {githubActivity.cells.map((cell) => (
+                        <span
+                          key={cell.date}
+                          className="size-[9px] rounded-[2px]"
+                          title={cell.date}
+                          style={{ backgroundColor: ["#292929", "#244d2b", "#347d3b", "#4aa83f", "#72f257"][cell.level] ?? "#72f257" }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+
+              <div className="grid gap-6 pt-5 sm:grid-cols-2 sm:gap-10">
+                <motion.div initial={false} animate={sectionState("stats") ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }} transition={{ duration: shouldReduceMotion ? 0 : 0.4, delay: shouldReduceMotion ? 0 : 0.18 }}>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/40">Currently working on</p>
+                  <h3 className="mt-3 text-lg font-medium text-white">Qflow</h3>
+                  <p className="mt-1 text-sm leading-6 text-white/50">A digital queue platform designed to reduce wait times and help teams manage busy queues.</p>
+                </motion.div>
+                <motion.div initial={false} animate={sectionState("stats") ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }} transition={{ duration: shouldReduceMotion ? 0 : 0.4, delay: shouldReduceMotion ? 0 : 0.24 }}>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/40">Currently studying</p>
+                  <h3 className="mt-3 text-lg font-medium text-white">Product engineering</h3>
+                  <p className="mt-1 text-sm leading-6 text-white/50">Expressive interfaces, useful motion, and the small details that make products feel natural.</p>
+                </motion.div>
+              </div>
+            </div>
           </motion.section>
 
-          <motion.section id="projects" className="absolute inset-0 flex items-center justify-center border-y border-black bg-[#141414] px-16" animate={sectionState("projects") ? { opacity: 1, filter: "blur(0px)" } : { opacity: 0, filter: "blur(12px)" }} transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeInOut" }} style={{ pointerEvents: sectionState("projects") ? "auto" : "none" }} aria-labelledby="projects-title">
-            <div className="w-full max-w-[760px]">
-              <motion.p initial={false} animate={sectionState("projects") ? { opacity: 1, x: 0 } : { opacity: 0, x: -18 }} transition={{ duration: shouldReduceMotion ? 0 : 0.5 }} className="text-sm uppercase tracking-[0.3em] text-white">Selected work</motion.p>
-              <motion.h2 id="projects-title" initial={false} animate={sectionState("projects") ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }} transition={{ duration: shouldReduceMotion ? 0 : 0.5, delay: shouldReduceMotion ? 0 : 0.08 }} className="mt-4 font-serif text-5xl text-white">Projects</motion.h2>
-              <motion.div className="mt-10 grid grid-cols-3 gap-4" initial={false} animate={sectionState("projects") ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }} transition={{ duration: shouldReduceMotion ? 0 : 0.6, delay: shouldReduceMotion ? 0 : 0.15 }}>
-                {[['Betterclock', 'A focused timer for getting things done.'], ['DoLog', 'A productivity space for consistent progress.'], ['Now Playing', 'A small Spotify integration for the page.']].map(([title, description]) => (
-                  <motion.article key={title} className="min-h-[180px] border border-[#394139] bg-[#1b1b1b] p-5" whileHover={shouldReduceMotion ? undefined : { y: -8, borderColor: "#72f257" }} transition={{ duration: 0.2 }}>
-                    <h3 className="text-lg text-white">{title}</h3>
-                    <p className="mt-4 text-sm leading-6 text-white">{description}</p>
+          <motion.section id="projects" className="absolute inset-0 flex items-center justify-center border-y border-black bg-[#141414] px-6 sm:px-12" animate={sectionState("projects") ? { opacity: 1, filter: "blur(0px)" } : { opacity: 0, filter: "blur(12px)" }} transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeInOut" }} style={{ pointerEvents: sectionState("projects") ? "auto" : "none" }} aria-labelledby="projects-title">
+            <div className="w-full max-w-[800px]">
+              <motion.p initial={false} animate={sectionState("projects") ? { opacity: 1, x: 0 } : { opacity: 0, x: -12 }} transition={{ duration: shouldReduceMotion ? 0 : 0.45 }} className="text-xs font-medium uppercase tracking-[0.24em] text-white/45">Selected work</motion.p>
+              <motion.h2 id="projects-title" initial={false} animate={sectionState("projects") ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }} transition={{ duration: shouldReduceMotion ? 0 : 0.45, delay: shouldReduceMotion ? 0 : 0.06 }} className="mt-3 font-serif text-4xl text-white sm:text-5xl">Projects</motion.h2>
+              <div className="mt-8">
+                {
+                [
+                  ['Betterclock', 'A focused timer for getting things done.'],
+                  ['DoLog', 'A productivity space for consistent progress.'],
+                  ['Qflow', 'A universal queue-management platform designed to reduce waiting time and manage high-volume queues digitally.']
+
+
+                  ].map(([title, description], index) => (
+                  <motion.article
+                    key={title}
+                    className="grid grid-cols-[2.5rem_minmax(0,1fr)]  gap-x-3 border-t border-white/10 py-5 sm:grid-cols-[3.5rem_minmax(0,1fr)] sm:gap-x-5"
+                    initial={false}
+                    animate={sectionState("projects") ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }
+                  }
+                    transition={{ duration: shouldReduceMotion ? 0 : 0.4, delay: shouldReduceMotion ? 0 : 0.12 + index * 0.08 }}
+                  >
+                    <span className="pt-1 font-mono text-xs text-white/30">0{index + 1}</span>
+                    <div>
+                      <h3 className="text-base font-medium text-white/90 sm:text-lg">{title}</h3>
+                      <p className="mt-1.5 text-sm leading-6 text-white/45">{description}</p>
+                    </div>
                   </motion.article>
                 ))}
-              </motion.div>
+              </div>
             </div>
           </motion.section>
 
@@ -268,22 +360,12 @@ export default function Page() {
       <motion.div className="fixed bottom-0 left-1/2 z-20 aspect-square w-[min(360px,42vw)] -translate-x-1/2 translate-y-[65%]" initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: shouldReduceMotion ? 0 : 0.2 }} aria-label="Portfolio navigation">
           <motion.div className="absolute inset-0" animate={{ rotate: dialRotation }} transition={{ duration: shouldReduceMotion ? 0 : 0.12, ease: "linear" }}>
           <div className="pointer-events-none absolute inset-0 rounded-full border-2 border-dashed border-[rgb(45_113_69_/_75%)]" aria-hidden="true" />
-          <motion.button type="button" onClick={() => navigateTo("home")} className={`pointer-events-auto absolute left-1/2 top-[-36px] -translate-x-1/2 border-0 bg-transparent text-[16px] ${activeSection === "home" ? "text-[#72f257]" : "text-white"}`} whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}>
-            <span className="absolute left-1/2 top-[23px] size-[17px] -translate-x-1/2 rounded-full bg-[#72f257]" aria-hidden="true" />
-            <motion.span className="inline-block" animate={{ rotate: -dialRotation }}>Home</motion.span>
-          </motion.button>
-          <motion.button type="button" onClick={() => navigateTo("personal")} className={`pointer-events-auto absolute left-[-38px] top-[18%] border-0 bg-transparent text-[16px] ${activeSection === "personal" ? "text-[#72f257]" : "text-white"}`} whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}>
-            <span className="absolute left-[66px] top-[5px] size-[17px] rounded-full bg-[#72f257]" aria-hidden="true" />
-            <motion.span className="inline-block" animate={{ rotate: -dialRotation }}>Personal</motion.span>
-          </motion.button>
-          <motion.button type="button" onClick={() => navigateTo("projects")} className={`pointer-events-auto absolute right-[-47px] top-[18%] border-0 bg-transparent text-[16px] ${activeSection === "projects" ? "text-[#72f257]" : "text-white"}`} whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}>
-            <span className="absolute right-[67px] top-[5px] size-[17px] rounded-full bg-[#72f257]" aria-hidden="true" />
-            <motion.span className="inline-block" animate={{ rotate: -dialRotation }}>Projects</motion.span>
-          </motion.button>
-          <motion.button type="button" onClick={() => navigateTo("contact")} className={`pointer-events-auto absolute bottom-[-26px] left-1/2 -translate-x-1/2 border-0 bg-transparent text-[16px] ${activeSection === "contact" ? "text-[#72f257]" : "text-white"}`} whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}>
-            <span className="absolute bottom-[23px] left-1/2 size-[17px] -translate-x-1/2 rounded-full bg-[#72f257]" aria-hidden="true" />
-            <motion.span className="inline-block" animate={{ rotate: -dialRotation }}>Contact</motion.span>
-          </motion.button>
+          {sections.map((section) => (
+            <motion.button key={section} type="button" onClick={() => navigateTo(section)} className={`pointer-events-auto absolute border-0 bg-transparent text-[16px] ${dialPositions[section].button} ${activeSection === section ? "text-[#72f257]" : "text-white"}`} whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}>
+              <span className={`absolute size-[17px] rounded-full bg-[#72f257] ${dialPositions[section].marker}`} aria-hidden="true" />
+              <motion.span className="inline-block" animate={{ rotate: -dialRotation }}>{section[0].toUpperCase() + section.slice(1)}</motion.span>
+            </motion.button>
+          ))}
         </motion.div>
       </motion.div>
     </>
