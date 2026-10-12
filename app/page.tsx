@@ -4,6 +4,7 @@ import Image from "next/image";
 import { motion, useReducedMotion , AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
+import AlternatePortfolio from "./alternate-portfolio";
 
 const sections = ["home", "stats", "projects", "contact"] as const;
 const words = ["Fullstack","Product engineer" ];
@@ -38,7 +39,7 @@ function pickCursorCharacter() {
   return characters[Math.floor(Math.random() * characters.length)];
 }
 
-export default function Page() {
+function CurrentPortfolio() {
   const shouldReduceMotion = useReducedMotion();
   const [activeSection, setActiveSection] = useState<SectionId>("home");
   const [dialRotation, setDialRotation] = useState(0);
@@ -370,4 +371,78 @@ export default function Page() {
       </motion.div>
     </>
   );
+}
+
+type PortfolioView = "chooser" | "current" | "alternate";
+
+function getPortfolioView(): PortfolioView {
+  switch (window.location.hash) {
+    case "#current":
+      return "current";
+    case "#alternate":
+      return "alternate";
+    default:
+      return "chooser";
+  }
+}
+
+function PortfolioChooser() {
+  return (
+    <main className="flex min-h-svh items-center justify-center bg-[#111] px-6 py-20 text-white">
+      <div className="w-full max-w-5xl">
+        <p className="text-xs uppercase tracking-[0.3em] text-[#72f257]">Akhand Veer Singh / Portfolio</p>
+        <h1 className="mt-6 max-w-3xl font-serif text-5xl leading-tight sm:text-7xl">
+          Two ways to explore what I make.
+        </h1>
+        <p className="mt-6 max-w-xl text-base leading-7 text-white/55">
+          Pick a portfolio experience. You can switch between them anytime from the navigation above.
+        </p>
+
+        <div className="mt-12 grid gap-4 md:grid-cols-2">
+          <a
+            href="#current"
+            className="group rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition-colors hover:border-[#72f257]/50 hover:bg-white/[0.06] sm:p-8"
+          >
+            <span className="text-xs uppercase tracking-[0.2em] text-white/40">01 / Original</span>
+            <h2 className="mt-5 font-serif text-3xl">The interactive portfolio</h2>
+            <p className="mt-3 max-w-md text-sm leading-6 text-white/50">
+              The existing portfolio, with its rotating section dial, live activity, and motion-led navigation.
+            </p>
+            <span className="mt-8 inline-flex items-center gap-2 text-sm text-[#72f257]">
+              Explore original <span aria-hidden="true">-&gt;</span>
+            </span>
+          </a>
+
+          <a
+            href="#alternate"
+            className="group rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition-colors hover:border-[#72f257]/50 hover:bg-white/[0.06] sm:p-8"
+          >
+            <span className="text-xs uppercase tracking-[0.2em] text-white/40">02 / New direction</span>
+            <h2 className="mt-5 font-serif text-3xl">The editorial portfolio</h2>
+            <p className="mt-3 max-w-md text-sm leading-6 text-white/50">
+              A quieter, scrollable take focused on the work, the craft, and how to get in touch.
+            </p>
+            <span className="mt-8 inline-flex items-center gap-2 text-sm text-[#72f257]">
+              Explore new design <span aria-hidden="true">-&gt;</span>
+            </span>
+          </a>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+export default function Page() {
+  const [view, setView] = useState<PortfolioView>("chooser");
+
+  useEffect(() => {
+    const syncView = () => setView(getPortfolioView());
+    syncView();
+    window.addEventListener("hashchange", syncView);
+    return () => window.removeEventListener("hashchange", syncView);
+  }, []);
+
+  if (view === "current") return <CurrentPortfolio />;
+  if (view === "alternate") return <AlternatePortfolio />;
+  return <PortfolioChooser />;
 }

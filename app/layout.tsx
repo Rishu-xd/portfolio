@@ -23,7 +23,23 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <nav
+          aria-label="Portfolio view switcher"
+          className="fixed right-4 top-4 z-30 flex items-center gap-1 rounded-full border border-white/10 bg-[#111]/90 p-1 text-xs text-white shadow-lg backdrop-blur sm:right-6 sm:top-6"
+        >
+          <a href="#chooser" className="rounded-full px-3 py-2 transition-colors hover:bg-white/10">
+            Choose
+          </a>
+          <a href="#current" className="rounded-full px-3 py-2 transition-colors hover:bg-white/10">
+            Original
+          </a>
+          <a href="#alternate" className="rounded-full px-3 py-2 transition-colors hover:bg-white/10">
+            New design
+          </a>
+        </nav>
+        {children}
+      </body>
     </html>
   );
 }
