@@ -26,16 +26,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <nav
           aria-label="Portfolio view switcher"
-          className="fixed right-4 top-4 z-30 flex items-center gap-1 rounded-full border border-white/10 bg-[#111]/90 p-1 text-xs text-white shadow-lg backdrop-blur sm:right-6 sm:top-6"
+          className="fixed bottom-4 left-4 z-30 flex items-center rounded-full border border-white/10 bg-[#111]/90 p-1 text-[11px] text-white shadow-lg backdrop-blur lg:bottom-auto lg:left-[calc(50%+320px)] lg:top-4"
         >
-          <a href="#chooser" className="rounded-full px-3 py-2 transition-colors hover:bg-white/10">
+          <a href="#chooser" className="whitespace-nowrap rounded-full px-2 py-2 transition-colors hover:bg-white/10">
             Choose
           </a>
-          <a href="#current" className="rounded-full px-3 py-2 transition-colors hover:bg-white/10">
+          <a href="#current" className="whitespace-nowrap rounded-full px-2 py-2 transition-colors hover:bg-white/10">
             Original
           </a>
-          <a href="#alternate" className="rounded-full px-3 py-2 transition-colors hover:bg-white/10">
-            New design
+          <a href="#alternate" className="whitespace-nowrap rounded-full px-2 py-2 transition-colors hover:bg-white/10">
+            New UI
           </a>
         </nav>
         {children}
