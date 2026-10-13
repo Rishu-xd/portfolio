@@ -24,20 +24,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <nav
-          aria-label="Portfolio view switcher"
-          className="fixed bottom-4 left-4 z-30 flex items-center rounded-full border border-white/10 bg-[#111]/90 p-1 text-[11px] text-white shadow-lg backdrop-blur lg:bottom-auto lg:left-[calc(50%+320px)] lg:top-4"
-        >
-          <a href="#chooser" className="whitespace-nowrap rounded-full px-2 py-2 transition-colors hover:bg-white/10">
-            Choose
-          </a>
-          <a href="#current" className="whitespace-nowrap rounded-full px-2 py-2 transition-colors hover:bg-white/10">
-            Original
-          </a>
-          <a href="#alternate" className="whitespace-nowrap rounded-full px-2 py-2 transition-colors hover:bg-white/10">
-            New UI
-          </a>
-        </nav>
         {children}
       </body>
     </html>

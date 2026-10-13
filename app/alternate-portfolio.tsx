@@ -4,7 +4,6 @@ import Image from "next/image";
 import {
   ArrowUpRight,
   BriefcaseBusiness,
-  ChevronDown,
   CodeXml,
   Mail,
   Moon,
@@ -53,6 +52,21 @@ const contactLinks = [
   { label: "Mail", href: "mailto:rishu99xd@gmail.com", icon: Mail, external: false },
 ];
 
+const skills = [
+  { name: "TypeScript", image: "typescript.png" },
+  { name: "Tailwind CSS", image: "tailwindcss.png" },
+  { name: "Supabase", image: "supabase.png" },
+  { name: "React", image: "react.png" },
+  { name: "Python", image: "python.png" },
+  { name: "PostgreSQL", image: "postgresql.png" },
+  { name: "Node.js", image: "nodejs.png" },
+  { name: "Next.js", image: "next-js.png" },
+  { name: "Git", image: "git.png" },
+  { name: "Docker", image: "docker.png" },
+  { name: "C++", image: "cpp.png" },
+  { name: "C", image: "c-lang.png" },
+];
+
 const roles = ["Full-stack", "Product engineer"];
 
 export default function AlternatePortfolio() {
@@ -93,9 +107,7 @@ export default function AlternatePortfolio() {
       id="home"
     >
       <div
-        className={`mx-auto min-h-svh w-full max-w-[628px] border-x ${
-          lightTheme ? "border-black/[0.08]" : "border-white/[0.08]"
-        }`}
+        className={`portfolio-frame mx-auto min-h-svh w-full max-w-[628px] `}
       >
         <motion.header
           initial={shouldReduceMotion ? false : { opacity: 0, y: -10 }}
@@ -114,19 +126,7 @@ export default function AlternatePortfolio() {
             <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} onClick={playEnabledSound} className="text-current transition-colors hover:text-current" href="#home">Home</motion.a>
             <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} onClick={playEnabledSound} className="transition-colors hover:text-current" href="#projects">Projects</motion.a>
             <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} onClick={playEnabledSound} className="transition-colors hover:text-current" href="#experience">Experience</motion.a>
-            <details className="group relative h-full">
-              <summary onClick={playEnabledSound} className="flex h-full cursor-pointer list-none items-center gap-1 transition-colors hover:text-current">
-                More
-                <ChevronDown className="size-3 transition-transform group-open:rotate-180" aria-hidden="true" />
-              </summary>
-              <div className={`absolute right-0 top-full mt-1 grid min-w-32 gap-1 rounded-md border p-1.5 shadow-xl ${
-                lightTheme ? "border-black/10 bg-[#f4f3ef]" : "border-white/10 bg-[#141414]"
-              }`}>
-                <a onClick={playEnabledSound} className="rounded px-2 py-1.5 hover:bg-current/5" href="#contact">Contact</a>
-                <a onClick={playEnabledSound} className="rounded px-2 py-1.5 hover:bg-current/5" href="#chooser">Choose portfolio</a>
-                <a onClick={playEnabledSound} className="rounded px-2 py-1.5 hover:bg-current/5" href="#current">Original design</a>
-              </div>
-            </details>
+            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} onClick={playEnabledSound} className="transition-colors hover:text-current" href="#contact">Contact</motion.a>
             <button
               type="button"
               aria-label={lightTheme ? "Switch to dark theme" : "Switch to light theme"}
@@ -182,9 +182,8 @@ export default function AlternatePortfolio() {
           initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: shouldReduceMotion ? 0 : 0.45, delay: shouldReduceMotion ? 0 : 0.2 }}
-          className={`flex items-center gap-4 border-b px-4 py-4 sm:px-5 ${
-            lightTheme ? "border-black/[0.1]" : "border-white/[0.1]"
-          }`}
+          className={`flex items-center gap-4  px-4 py-4 sm:px-5
+          `}
           aria-labelledby="profile-name"
         >
           <motion.div
@@ -226,21 +225,20 @@ export default function AlternatePortfolio() {
               <path d="M1.7 8s2.3-4 6.3-4 6.3 4 6.3 4-2.3 4-6.3 4-6.3-4-6.3-4Z" stroke="currentColor" />
               <circle cx="8" cy="8" r="1.7" stroke="currentColor" />
             </svg>
-            Portfolio
+            Views
           </span>
         </motion.section>
+        <div className="w-full h-0.25 bg-linear-to-r from-transparent via-[rgb(130,130,130)] to-transparent"></div>
 
         <motion.section
           {...reveal}
           transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeOut" }}
           viewport={{ once: true, amount: 0.3 }}
           id="about"
-          className={`border-b px-4 py-5 sm:px-5 ${
-            lightTheme ? "border-black/[0.1]" : "border-white/[0.1]"
-          }`}
+          className={`border-b px-4 py-5 sm:px-5 `}
           aria-labelledby="about-title"
         >
-          <h2 id="about-title" className="font-serif text-[22px] leading-tight">About</h2>
+          {/* <h2 id="about-title" className="font-serif text-[22px] leading-tight">About</h2> */}
           <ul className="mt-4 list-disc space-y-2.5 pl-4 text-[13px] leading-[1.5] text-current/80 marker:text-current/35">
             <motion.li {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.08 }}>
               I&apos;m a <strong className="font-semibold text-current">Product Engineer</strong> passionate about crafting digital products where thoughtful design meets clean, scalable code.
@@ -252,6 +250,11 @@ export default function AlternatePortfolio() {
               I enjoy transforming ideas into polished products, exploring new technologies, refining details, and creating intuitive experiences.
             </motion.li>
           </ul>
+
+           <motion.div {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.16 }} className={`mt-3 flex flex-wrap items-center justify-between gap-2 border p-3 ${
+            lightTheme ? "border-black/[0.08] bg-black/[0.02]" : "border-white/[0.08] bg-white/[0.02]"
+          }`}>
+          </motion.div>
         </motion.section>
 
         <motion.section
@@ -277,49 +280,53 @@ export default function AlternatePortfolio() {
               <span className="text-[10px] text-current/40">In progress</span>
             </div>
           </motion.div>
+
+         
         </motion.section>
+
+        
 
         <motion.section
           {...reveal}
           transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeOut" }}
-          viewport={{ once: true, amount: 0.35 }}
-          id="contact"
-          className={`border-b px-4 py-4 sm:px-5 ${
-            lightTheme ? "border-black/[0.1]" : "border-white/[0.1]"
+          viewport={{ once: true, amount: 0.25 }}
+          id="skills"
+          className={`overflow-hidden border-b py-4 ${
+            lightTheme ? "border-black/[0.1] border-dashed" : "border-white/[0.1] border-dashed"
           }`}
-          aria-labelledby="contact-title"
+          aria-labelledby="skills-title"
         >
-          <h2 id="contact-title" className="font-serif  text-[22px] leading-tight">Contact</h2>
-          <div className="mt-3 grid grid-cols-2   border-gray-800 border-t-1  sm:grid-cols-4">
-            {contactLinks.map((link, index) => {
-              const Icon = link.icon;
-              return (
-              <motion.a
-                key={link.label}
-                {...itemReveal}
-                onClick={playEnabledSound}
-                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
-                transition={{ duration: shouldReduceMotion ? 0 : 0.3, delay: shouldReduceMotion ? 0 : index * 0.06 }}
-                className={`flex min-h-10 items-center gap-2 border-b border-r px-2 text-xs transition-colors ${
-                  lightTheme
-                    ? "border-black/[0.1] hover:bg-black/[0.04]"
-                    : "border-white/[0.1] hover:bg-white/[0.05]"
-                }`}
-                href={link.href}
-                target={link.external ? "_blank" : undefined}
-                rel={link.external ? "noreferrer" : undefined}
-              >
-                <span className={`grid size-6 shrink-0 place-items-center rounded-md border ${
-                  lightTheme ? "border-black/10 bg-black/[0.02]" : "border-white/10 bg-white/[0.02]"
-                }`}>
-                  <Icon className="size-3.5" aria-hidden="true" />
-                </span>
-                <span>{link.label}</span>
-                {link.external && <ArrowUpRight className="ml-auto size-3 text-current/40" aria-hidden="true" />}
-              </motion.a>
-              );
-            })}
+          <h2 id="skills-title" className="mb-3 px-4 font-serif text-[22px] leading-tight sm:px-5  ">Skills</h2>
+          <div className="skills-marquee grid gap-1 border-gray-500 border-dashed border-l border-r " aria-label="Skills and technologies">
+            {[false, true].map((reverse) => (
+              <div className="skills-marquee-window "  key={reverse ? "right" : "left" }>
+                <div className={`skills-marquee-track ${reverse ? "skills-marquee-track--right" : ""}`}>
+                  {[0, 1].map((copy) => (
+                    <div className="skills-marquee-group" key={copy} aria-hidden={copy === 1}>
+                      {skills.map((skill) => (
+                        <div
+                          className={`flex h-10 w-[104px] shrink-0 items-center gap-2 rounded-md border border-dashed px-2 transition-colors duration-200 ${
+                            lightTheme
+                              ? "border-black/20 hover:border-gray-300 hover:bg-emerald-700/10 hover:text-gray-300"
+                              : "border-white/20 hover:border-gray-300 hover:bg-lime-300/10 hover:text-gray-300"
+                          }`}
+                          key={skill.name}
+                        >
+                          <Image
+                            src={`/skills/${skill.image}`}
+                            alt=""
+                            width={25}
+                            height={25}
+                            className="size-6 shrink-0 object-contain"
+                          />
+                          <span className="text-[12px] leading-tight text-current/75 ">{skill.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </motion.section>
 
