@@ -3,17 +3,11 @@
 import Image from "next/image";
 import {
   ArrowUpRight,
-  BriefcaseBusiness,
-  CodeXml,
-  Mail,
   Moon,
   Sun,
-  Volume2,
-  VolumeX,
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
-import useSound from "use-sound";
 
 const projects = [
   {
@@ -46,10 +40,10 @@ const projects = [
 ];
 
 const contactLinks = [
-  { label: "GitHub", href: "https://github.com/Rishu-xd", icon: CodeXml, external: true },
-  { label: "LinkedIn", href: "https://linkedin.com", icon: BriefcaseBusiness, external: true },
-  { label: "Twitter", href: "https://x.com", icon: ArrowUpRight, external: true },
-  { label: "Mail", href: "mailto:rishu99xd@gmail.com", icon: Mail, external: false },
+  { label: "GitHub", href: "https://github.com/Rishu-xd", icon: "/github.png", external: true },
+  { label: "LinkedIn", href: "https://linkedin.com", icon: "/linkedin.png", external: true },
+  { label: "Twitter", href: "https://x.com", icon: "/x.png", external: true },
+  { label: "Mail", href: "mailto:rishu99xd@gmail.com", icon: "/gmailnew.png", external: false },
 ];
 
 const skills = [
@@ -71,16 +65,8 @@ const roles = ["Full-stack", "Product engineer"];
 
 export default function AlternatePortfolio() {
   const [lightTheme, setLightTheme] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(false);
   const [roleIndex, setRoleIndex] = useState(0);
   const shouldReduceMotion = useReducedMotion();
-  const [playUiSound] = useSound("/sounds/interface-pop.wav", {
-    volume: 0.18,
-    interrupt: true,
-  });
-  const playEnabledSound = () => {
-    if (soundEnabled) playUiSound();
-  };
   const reveal = shouldReduceMotion
     ? { initial: false as const, whileInView: undefined }
     : { initial: { opacity: 0, y: 16 }, whileInView: { opacity: 1, y: 0 } };
@@ -119,40 +105,23 @@ export default function AlternatePortfolio() {
               : "border-white/[0.1] bg-[#0b0b0b]/90"
           }`}
         >
-          <motion.a href="#home" onClick={playEnabledSound} whileHover={shouldReduceMotion ? undefined : { y: -1 }} className="font-serif text-lg leading-none tracking-tight">
+          <motion.a href="#home" whileHover={shouldReduceMotion ? undefined : { y: -1 }} className="font-serif text-lg leading-none tracking-tight">
             Rishu
           </motion.a>
           <nav className="flex h-full items-center gap-3 text-[10px] text-current/60 sm:gap-5 sm:text-xs" aria-label="Main navigation">
-            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} onClick={playEnabledSound} className="text-current transition-colors hover:text-current" href="#home">Home</motion.a>
-            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} onClick={playEnabledSound} className="transition-colors hover:text-current" href="#projects">Projects</motion.a>
-            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} onClick={playEnabledSound} className="transition-colors hover:text-current" href="#experience">Experience</motion.a>
-            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} onClick={playEnabledSound} className="transition-colors hover:text-current" href="#contact">Contact</motion.a>
+            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="text-current transition-colors hover:text-current" href="#home">Home</motion.a>
+            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="transition-colors hover:text-current" href="#projects">Projects</motion.a>
+            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="transition-colors hover:text-current" href="#experience">Experience</motion.a>
+            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="transition-colors hover:text-current" href="#contact">Contact</motion.a>
             <button
               type="button"
               aria-label={lightTheme ? "Switch to dark theme" : "Switch to light theme"}
               aria-pressed={lightTheme}
-              onClick={() => {
-                playEnabledSound();
-                setLightTheme((currentTheme) => !currentTheme);
-              }}
+              onClick={() => setLightTheme((currentTheme) => !currentTheme)}
               className="ml-1 grid size-7 place-items-center rounded-full transition-colors hover:bg-current/10"
             >
               <motion.span key={lightTheme ? "sun" : "moon"} initial={shouldReduceMotion ? false : { scale: 0.5, rotate: -35, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }} transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}>
                 {lightTheme ? <Sun className="size-3.5" aria-hidden="true" /> : <Moon className="size-3.5" aria-hidden="true" />}
-              </motion.span>
-            </button>
-            <button
-              type="button"
-              aria-label={soundEnabled ? "Mute interface sounds" : "Enable interface sounds"}
-              aria-pressed={soundEnabled}
-              onClick={() => {
-                if (!soundEnabled) playUiSound();
-                setSoundEnabled((enabled) => !enabled);
-              }}
-              className="grid size-7 place-items-center rounded-full transition-colors hover:bg-current/10"
-            >
-              <motion.span key={soundEnabled ? "sound-on" : "sound-off"} initial={shouldReduceMotion ? false : { scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}>
-                {soundEnabled ? <Volume2 className="size-3.5" aria-hidden="true" /> : <VolumeX className="size-3.5" aria-hidden="true" />}
               </motion.span>
             </button>
           </nav>
@@ -228,8 +197,6 @@ export default function AlternatePortfolio() {
             Views
           </span>
         </motion.section>
-        <div className="w-full h-0.25 bg-linear-to-r from-transparent via-[rgb(130,130,130)] to-transparent"></div>
-
         <motion.section
           {...reveal}
           transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeOut" }}
@@ -250,6 +217,31 @@ export default function AlternatePortfolio() {
               I enjoy transforming ideas into polished products, exploring new technologies, refining details, and creating intuitive experiences.
             </motion.li>
           </ul>
+
+          <nav className="mt-4 flex items-center gap-3 sm:gap-4" aria-label="Social links">
+            {contactLinks.map(({ label, href, icon, external }, index) => (
+              <motion.a
+                key={label}
+                href={href}
+                aria-label={label}
+                target={external ? "_blank" : undefined}
+                rel={external ? "noreferrer" : undefined}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.3, delay: shouldReduceMotion ? 0 : index * 0.06 }}
+                
+                whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
+                className={`grid size-10 place-items-center rounded-12 border-[2px] transition-colors ${
+                  lightTheme
+                    ? "border-black/15 hover:border-black/40"
+                    : "border-white/15 hover:border-white/40"
+                }`}
+              >
+                <Image src={icon} alt="" width={20} height={20} className="size-5 object-contain" />
+              </motion.a>
+            ))}
+          </nav>
 
            <motion.div {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.16 }} className={`mt-3 flex flex-wrap items-center justify-between gap-2 border p-3 ${
             lightTheme ? "border-black/[0.08] bg-black/[0.02]" : "border-white/[0.08] bg-white/[0.02]"
@@ -297,7 +289,7 @@ export default function AlternatePortfolio() {
           aria-labelledby="skills-title"
         >
           <h2 id="skills-title" className="mb-3 px-4 font-serif text-[22px] leading-tight sm:px-5  ">Skills</h2>
-          <div className="skills-marquee grid gap-1 border-gray-500 border-dashed border-l border-r " aria-label="Skills and technologies">
+          <div className="skills-marquee grid gap-1 border-gray-500 border-dashed border-t border-b p-1 " aria-label="Skills and technologies">
             {[false, true].map((reverse) => (
               <div className="skills-marquee-window "  key={reverse ? "right" : "left" }>
                 <div className={`skills-marquee-track ${reverse ? "skills-marquee-track--right" : ""}`}>
@@ -305,7 +297,7 @@ export default function AlternatePortfolio() {
                     <div className="skills-marquee-group" key={copy} aria-hidden={copy === 1}>
                       {skills.map((skill) => (
                         <div
-                          className={`flex h-10 w-[104px] shrink-0 items-center gap-2 rounded-md border border-dashed px-2 transition-colors duration-200 ${
+                          className={`flex h-10 w-[104px] shrink-0 items-center cursor-pointer gap-2 rounded-md border border-dashed px-2 transition-colors duration-200 ${
                             lightTheme
                               ? "border-black/20 hover:border-gray-300 hover:bg-emerald-700/10 hover:text-gray-300"
                               : "border-white/20 hover:border-gray-300 hover:bg-lime-300/10 hover:text-gray-300"
@@ -340,7 +332,7 @@ export default function AlternatePortfolio() {
         >
           <div className="mb-3 flex items-center justify-between px-1">
             <h2 id="projects-title" className="font-serif text-[22px] leading-tight">Projects</h2>
-            <motion.a onClick={playEnabledSound} whileHover={shouldReduceMotion ? undefined : { x: 2 }} className="inline-flex items-center gap-1 text-[10px] text-current/45 transition-colors hover:text-current" href="https://github.com/Rishu-xd" target="_blank" rel="noreferrer">
+            <motion.a whileHover={shouldReduceMotion ? undefined : { x: 2 }} className="inline-flex items-center gap-1 text-[10px] text-current/45 transition-colors hover:text-current" href="https://github.com/Rishu-xd" target="_blank" rel="noreferrer">
               View all <ArrowUpRight className="size-3" aria-hidden="true" />
             </motion.a>
           </div>
@@ -350,7 +342,6 @@ export default function AlternatePortfolio() {
               <motion.a
                 key={project.number}
                 {...itemReveal}
-                onClick={playEnabledSound}
                 whileHover={shouldReduceMotion ? undefined : { y: -4 }}
                 whileTap={shouldReduceMotion ? undefined : { scale: 0.99 }}
                 transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : index * 0.09 }}
@@ -401,7 +392,7 @@ export default function AlternatePortfolio() {
           lightTheme ? "border-black/[0.1]" : "border-white/[0.1]"
         }`}>
           <span>Designed & built by Akhand Veer Singh</span>
-          <motion.a onClick={playEnabledSound} whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="inline-flex items-center gap-1 transition-colors hover:text-current" href="#home">Back to top <ArrowUpRight className="size-3" aria-hidden="true" /></motion.a>
+          <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="inline-flex items-center gap-1 transition-colors hover:text-current" href="#home">Back to top <ArrowUpRight className="size-3" aria-hidden="true" /></motion.a>
         </motion.footer>
       </div>
     </motion.main>
