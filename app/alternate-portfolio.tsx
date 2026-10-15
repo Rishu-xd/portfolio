@@ -6,6 +6,8 @@ import {
   Moon,
   Sun,
 } from "lucide-react";
+import { bind, play } from "cuelume";
+
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 
@@ -63,9 +65,21 @@ const skills = [
 
 const roles = ["Full-stack", "Product engineer"];
 
+type ContributionActivity = {
+  username: string;
+  total: number;
+  year: number;
+  cells: { date: string; level: number; count: number }[];
+};
+
+const darkActivityColors = ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"];
+const lightActivityColors = ["#ebedf0", "#aceebb", "#6fdd8b", "#2da44e", "#116329"];
+
 export default function AlternatePortfolio() {
   const [lightTheme, setLightTheme] = useState(false);
   const [roleIndex, setRoleIndex] = useState(0);
+  const [activity, setActivity] = useState<ContributionActivity | null>(null);
+  const [activityError, setActivityError] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const reveal = shouldReduceMotion
     ? { initial: false as const, whileInView: undefined }
@@ -80,6 +94,31 @@ export default function AlternatePortfolio() {
     }, 3300);
 
     return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => bind(), []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const year = new Date().getFullYear();
+
+    fetch(`/api/github-contributions?year=${year}`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error("GitHub activity is temporarily unavailable.");
+        }
+
+        const data: ContributionActivity = await response.json();
+        setActivity(data);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof Error && error.name === "AbortError") {
+          return;
+        }
+        setActivityError(true);
+      });
+
+    return () => controller.abort();
   }, []);
 
   return (
@@ -99,24 +138,21 @@ export default function AlternatePortfolio() {
           initial={shouldReduceMotion ? false : { opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: shouldReduceMotion ? 0 : 0.45, delay: shouldReduceMotion ? 0 : 0.08 }}
-          className={`sticky top-0 z-10 flex h-10 items-center justify-between border-b px-2 backdrop-blur-md sm:px-3 ${
-            lightTheme
-              ? "border-black/[0.1] bg-[#f4f3ef]/90"
-              : "border-white/[0.1] bg-[#0b0b0b]/90"
-          }`}
+          className={`sticky top-0 z-10 flex h-10 items-center justify-between  px-2 backdrop-blur-sm sm:px-3 `}
         >
-          <motion.a href="#home" whileHover={shouldReduceMotion ? undefined : { y: -1 }} className="font-serif text-lg leading-none tracking-tight">
+          <motion.a href="#home" data-cuelume-navigate whileHover={shouldReduceMotion ? undefined : { y: -1 }} className="font-serif text-lg leading-none tracking-tight">
             Rishu
           </motion.a>
           <nav className="flex h-full items-center gap-3 text-[10px] text-current/60 sm:gap-5 sm:text-xs" aria-label="Main navigation">
-            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="text-current transition-colors hover:text-current" href="#home">Home</motion.a>
-            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="transition-colors hover:text-current" href="#projects">Projects</motion.a>
-            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="transition-colors hover:text-current" href="#experience">Experience</motion.a>
-            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="transition-colors hover:text-current" href="#contact">Contact</motion.a>
+            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="text-current transition-colors hover:text-current" href="#home" data-cuelume-navigate>Home</motion.a>
+            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="transition-colors hover:text-current" href="#projects" data-cuelume-navigate>Projects</motion.a>
+            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="transition-colors hover:text-current" href="#experience" data-cuelume-navigate>Experience</motion.a>
+            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="transition-colors hover:text-current" href="#contact" data-cuelume-navigate>Contact</motion.a>
             <button
               type="button"
               aria-label={lightTheme ? "Switch to dark theme" : "Switch to light theme"}
               aria-pressed={lightTheme}
+              data-cuelume-toggle
               onClick={() => setLightTheme((currentTheme) => !currentTheme)}
               className="ml-1 grid size-7 place-items-center rounded-full transition-colors hover:bg-current/10"
             >
@@ -202,7 +238,7 @@ export default function AlternatePortfolio() {
           transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeOut" }}
           viewport={{ once: true, amount: 0.3 }}
           id="about"
-          className={`border-b px-4 py-5 sm:px-5 `}
+          className={` px-4 py-5 sm:px-5 `}
           aria-labelledby="about-title"
         >
           {/* <h2 id="about-title" className="font-serif text-[22px] leading-tight">About</h2> */}
@@ -223,16 +259,18 @@ export default function AlternatePortfolio() {
               <motion.a
                 key={label}
                 href={href}
+                data-cuelume-navigate
                 aria-label={label}
                 target={external ? "_blank" : undefined}
                 rel={external ? "noreferrer" : undefined}
                 initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: shouldReduceMotion ? 0 : 0.3, delay: shouldReduceMotion ? 0 : index * 0.06 }}
-                
+                transition={{ duration: shouldReduceMotion ? 0 : 0.25, delay: shouldReduceMotion ? 0 : index * 0.06 }}
+                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
+                onHoverStart={() => play("select", { emphasis: "subtle" })}
                 whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
-                className={`grid size-10 place-items-center rounded-12 border-[2px] transition-colors ${
+                className={`social-link grid size-10 place-items-center rounded-xl bg-black border-[2px] transition-colors ${
                   lightTheme
                     ? "border-black/15 hover:border-black/40"
                     : "border-white/15 hover:border-white/40"
@@ -243,49 +281,66 @@ export default function AlternatePortfolio() {
             ))}
           </nav>
 
-           <motion.div {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.16 }} className={`mt-3 flex flex-wrap items-center justify-between gap-2 border p-3 ${
-            lightTheme ? "border-black/[0.08] bg-black/[0.02]" : "border-white/[0.08] bg-white/[0.02]"
+          <motion.div {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.16 }} className={`mt-3 border p-3 ${
+            lightTheme ? "border-black/[0.08] bg-black/[0.02] hover:border-white/40"  : "border-white/[0.08] bg-white/[0.02] hover:border-white/50"
           }`}>
+            <div className="flex items-baseline justify-between gap-2">
+              <h2 className="font-serif text-sm">GitHub activity</h2>
+              {activity && (
+                <span className="text-[10px] text-current/50">
+                  {activity.total.toLocaleString()} contributions in {activity.year}
+                </span>
+              )}
+            </div>
+            {activity ? (
+              <div
+                className="mt-3 overflow-x-auto pb-1"
+                role="img"
+                aria-label={`${activity.total.toLocaleString()} GitHub contributions in ${activity.year}`}
+              >
+                <div className="grid w-max grid-rows-7 grid-flow-col gap-[3px]">
+                  {activity.cells.map(({ date, level, count }) => {
+                    const intensity = Math.min(Math.max(level, 0), 4);
+
+                    return (
+                      <span
+                        key={date}
+                        title={`${count} contribution${count === 1 ? "" : "s"} on ${date}`}
+                        aria-hidden="true"
+                        className="size-[9px] rounded-[2px]"
+                        style={{ backgroundColor: (lightTheme ? lightActivityColors : darkActivityColors)[intensity] }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            ) : activityError ? (
+              <p className="mt-3 text-xs text-current/50">
+                GitHub activity is temporarily unavailable.
+              </p>
+            ) : (
+              <p className="mt-3 text-xs text-current/50" role="status">
+                Loading GitHub activity…
+              </p>
+            )}
+            <a
+              href="https://github.com/Rishu-xd"
+              target="_blank"
+              rel="noreferrer"
+              data-cuelume-navigate
+              className="mt-3 inline-block text-[10px] text-current/50 transition-colors hover:text-current"
+            >
+              View GitHub profile
+            </a>
           </motion.div>
         </motion.section>
-
-        <motion.section
-          {...reveal}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeOut" }}
-          viewport={{ once: true, amount: 0.35 }}
-          id="experience"
-          className={`border-b px-4 py-4 sm:px-5 ${
-            lightTheme ? "border-black/[0.1]" : "border-white/[0.1]"
-          }`}
-          aria-labelledby="experience-title"
-        >
-          <h2 id="experience-title" className="font-serif text-[22px] leading-tight">Experience</h2>
-          <motion.div {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.08 }} className={`mt-3 flex flex-wrap items-center justify-between gap-2 border p-3 ${
-            lightTheme ? "border-black/[0.08] bg-black/[0.02]" : "border-white/[0.08] bg-white/[0.02]"
-          }`}>
-            <div>
-              <p className="text-sm font-medium">Qflow</p>
-              <p className="mt-1 text-xs text-current/50">Queue-management product · Product engineering</p>
-            </div>
-             <div className="flex items-center gap-1 justify-center ">
-              <span className="grid size-2 shrink-0 place-items-center rounded-full border border-current/30 bg-green-500"></span>
-              <span className="text-[10px] text-current/40">In progress</span>
-            </div>
-          </motion.div>
-
-         
-        </motion.section>
-
-        
 
         <motion.section
           {...reveal}
           transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeOut" }}
           viewport={{ once: true, amount: 0.25 }}
           id="skills"
-          className={`overflow-hidden border-b py-4 ${
-            lightTheme ? "border-black/[0.1] border-dashed" : "border-white/[0.1] border-dashed"
-          }`}
+          className={`overflow-hidden py-4 `}
           aria-labelledby="skills-title"
         >
           <h2 id="skills-title" className="mb-3 px-4 font-serif text-[22px] leading-tight sm:px-5  ">Skills</h2>
@@ -325,6 +380,37 @@ export default function AlternatePortfolio() {
         <motion.section
           {...reveal}
           transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeOut" }}
+          viewport={{ once: true, amount: 0.35 }}
+          id="experience"
+          className={`border-b px-4 py-4 sm:px-5 ${
+            lightTheme ? "border-black/[0.1]" : "border-white/[0.1]"
+          }`}
+          aria-labelledby="experience-title"
+        >
+          <h2 id="experience-title" className="font-serif text-[22px] leading-tight">Experience</h2>
+          <motion.div {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.08 }} className={`mt-3 flex flex-wrap items-center justify-between gap-2 border p-3 ${
+            lightTheme ? "border-black/[0.08] bg-black/[0.02]" : "border-white/[0.08] bg-white/[0.02]"
+          }`}>
+            <div>
+              <p className="text-sm font-medium">Qflow</p>
+              <p className="mt-1 text-xs text-current/50">Queue-management product · Product engineering</p>
+            </div>
+             <div className="flex items-center gap-1 justify-center ">
+              <span className="grid size-2 shrink-0 place-items-center rounded-full border border-current/30 bg-green-500"></span>
+              <span className="text-[10px] text-current/40">In progress</span>
+            </div>
+          </motion.div>
+
+         
+        </motion.section>
+
+        
+
+        
+
+        <motion.section
+          {...reveal}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeOut" }}
           viewport={{ once: true, amount: 0.15 }}
           id="projects"
           className="px-3 py-4 sm:px-3.5"
@@ -332,7 +418,7 @@ export default function AlternatePortfolio() {
         >
           <div className="mb-3 flex items-center justify-between px-1">
             <h2 id="projects-title" className="font-serif text-[22px] leading-tight">Projects</h2>
-            <motion.a whileHover={shouldReduceMotion ? undefined : { x: 2 }} className="inline-flex items-center gap-1 text-[10px] text-current/45 transition-colors hover:text-current" href="https://github.com/Rishu-xd" target="_blank" rel="noreferrer">
+            <motion.a whileHover={shouldReduceMotion ? undefined : { x: 2 }} className="inline-flex items-center gap-1 text-[10px] text-current/45 transition-colors hover:text-current" href="https://github.com/Rishu-xd" target="_blank" rel="noreferrer" data-cuelume-navigate>
               View all <ArrowUpRight className="size-3" aria-hidden="true" />
             </motion.a>
           </div>
@@ -346,6 +432,7 @@ export default function AlternatePortfolio() {
                 whileTap={shouldReduceMotion ? undefined : { scale: 0.99 }}
                 transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : index * 0.09 }}
                 href={project.href}
+                data-cuelume-navigate
                 target="_blank"
                 rel="noreferrer"
                 className={`group overflow-hidden rounded-md border transition-transform hover:-translate-y-0.5 ${
@@ -392,7 +479,7 @@ export default function AlternatePortfolio() {
           lightTheme ? "border-black/[0.1]" : "border-white/[0.1]"
         }`}>
           <span>Designed & built by Akhand Veer Singh</span>
-          <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="inline-flex items-center gap-1 transition-colors hover:text-current" href="#home">Back to top <ArrowUpRight className="size-3" aria-hidden="true" /></motion.a>
+          <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="inline-flex items-center gap-1 transition-colors hover:text-current" href="#home" data-cuelume-navigate>Back to top <ArrowUpRight className="size-3" aria-hidden="true" /></motion.a>
         </motion.footer>
       </div>
     </motion.main>

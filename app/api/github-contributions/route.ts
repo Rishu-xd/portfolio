@@ -47,13 +47,13 @@ export async function GET(request: Request) {
   start.setUTCDate(start.getUTCDate() - start.getUTCDay());
   const end = new Date(Date.UTC(Number(year), 11, 31));
   end.setUTCDate(end.getUTCDate() + (6 - end.getUTCDay()));
-  const cells: { date: string; level: number }[] = [];
+  const cells: { date: string; level: number; count: number }[] = [];
   const total = [...activity.values()].reduce((sum, cell) => sum + cell.count, 0);
 
   for (const date = new Date(start); date <= end; date.setUTCDate(date.getUTCDate() + 1)) {
     const dateString = date.toISOString().slice(0, 10);
     const cell = activity.get(dateString);
-    cells.push({ date: dateString, level: cell?.level ?? 0 });
+    cells.push({ date: dateString, level: cell?.level ?? 0, count: cell?.count ?? 0 });
   }
 
   if (cells.length === 0) {
