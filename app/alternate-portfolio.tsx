@@ -281,7 +281,7 @@ export default function AlternatePortfolio() {
             ))}
           </nav>
 
-          <motion.div {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.16 }} className={`mt-3 border p-3 ${
+          <motion.div {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.16 }} className={`mt-3 rounded-lg border-2 p-3 ${
             lightTheme ? "border-black/[0.08] bg-black/[0.02] hover:border-white/40"  : "border-white/[0.08] bg-white/[0.02] hover:border-white/50"
           }`}>
             <div className="flex items-baseline justify-between gap-2">
@@ -294,7 +294,7 @@ export default function AlternatePortfolio() {
             </div>
             {activity ? (
               <div
-                className="mt-3 overflow-x-auto pb-1"
+                className="activity-scroll mt-3 overflow-x-auto pt-8 pb-1"
                 role="img"
                 aria-label={`${activity.total.toLocaleString()} GitHub contributions in ${activity.year}`}
               >
@@ -303,13 +303,44 @@ export default function AlternatePortfolio() {
                     const intensity = Math.min(Math.max(level, 0), 4);
 
                     return (
-                      <span
+                      <motion.span
                         key={date}
-                        title={`${count} contribution${count === 1 ? "" : "s"} on ${date}`}
                         aria-hidden="true"
-                        className="size-[9px] rounded-[2px]"
+                        className={`size-[9px] rounded-[2px] ${count > 0 ? "relative" : ""}`}
                         style={{ backgroundColor: (lightTheme ? lightActivityColors : darkActivityColors)[intensity] }}
-                      />
+                        initial={count > 0 ? "rest" : false}
+                        animate={count > 0 ? "rest" : undefined}
+                        whileHover={count > 0 ? "hover" : undefined}
+                        variants={{
+                          rest: { scale: 1, zIndex: 0, boxShadow: "0 0 0 rgba(57, 211, 83, 0)" },
+                          hover: {
+                            scale: shouldReduceMotion ? 1 : 1.5,
+                            zIndex: 30,
+                            boxShadow: "0 0 8px rgba(57, 211, 83, 0.85)",
+                          },
+                        }}
+                        transition={{ duration: shouldReduceMotion ? 0 : 0.15 }}
+                      >
+                        {count > 0 && (
+                          <motion.span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-1 -translate-x-1/2 whitespace-nowrap rounded border border-[#242f28] bg-[#000d05] px-2 py-1 text-[5px] leading-tight text-white shadow-lg"
+                            variants={{
+                              rest: { opacity: 0, y: 4, scale: 0.95 },
+                              hover: { opacity: 1, y: 0, scale: 1 },
+                            }}
+                            transition={{ duration: shouldReduceMotion ? 0 : 0.16 }}
+                          >
+                            {count} contribution{count === 1 ? "" : "s"}
+                            {new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                            {" · "}
+                          </motion.span>
+                        )}
+                      </motion.span>
                     );
                   })}
                 </div>

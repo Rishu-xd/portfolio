@@ -16,6 +16,14 @@ body {
     font-family: Arial, sans-serif;
 }
 
+.activity-scroll {
+    scrollbar-width: none;
+}
+
+.activity-scroll::-webkit-scrollbar {
+    display: none;
+}
+
 .portfolio-frame [class*="border"] {
     border-style: dashed;
 }
