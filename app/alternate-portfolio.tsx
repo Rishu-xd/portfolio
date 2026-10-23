@@ -9,7 +9,7 @@ import {
 import { bind, play } from "cuelume";
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const projects = [
   {
@@ -73,13 +73,14 @@ type ContributionActivity = {
 };
 
 const darkActivityColors = ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"];
-const lightActivityColors = ["#ebedf0", "#aceebb", "#6fdd8b", "#2da44e", "#116329"];
+const lightActivityColors = ["#f0f0f0", "#d0d0d0", "#a3a3a3", "#737373", "#333333"];
 
 export default function AlternatePortfolio() {
   const [lightTheme, setLightTheme] = useState(false);
   const [roleIndex, setRoleIndex] = useState(0);
   const [activity, setActivity] = useState<ContributionActivity | null>(null);
   const [activityError, setActivityError] = useState(false);
+  const skillsMarqueeRef = useRef<HTMLDivElement>(null);
   const shouldReduceMotion = useReducedMotion();
   const reveal = shouldReduceMotion
     ? { initial: false as const, whileInView: undefined }
@@ -97,6 +98,49 @@ export default function AlternatePortfolio() {
   }, []);
 
   useEffect(() => bind(), []);
+
+  useEffect(() => {
+    const marquee = skillsMarqueeRef.current;
+    if (!marquee) return;
+
+    const animations = Array.from(
+      marquee.querySelectorAll(".skills-marquee-track"),
+    ).flatMap((track) => track.getAnimations());
+    const duration = 600;
+    let playbackRate = 1;
+    let animationFrame = 0;
+
+    const rampPlaybackRate = (targetRate: number) => {
+      window.cancelAnimationFrame(animationFrame);
+
+      const startRate = playbackRate;
+      const startTime = performance.now();
+
+      const updatePlaybackRate = (time: number) => {
+        const progress = Math.min((time - startTime) / duration, 1);
+        playbackRate = startRate + (targetRate - startRate) * progress;
+        animations.forEach((animation) => animation.updatePlaybackRate(playbackRate));
+
+        if (progress < 1) {
+          animationFrame = window.requestAnimationFrame(updatePlaybackRate);
+        }
+      };
+
+      animationFrame = window.requestAnimationFrame(updatePlaybackRate);
+    };
+
+    const handlePointerEnter = () => rampPlaybackRate(0);
+    const handlePointerLeave = () => rampPlaybackRate(1);
+
+    marquee.addEventListener("pointerenter", handlePointerEnter);
+    marquee.addEventListener("pointerleave", handlePointerLeave);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      marquee.removeEventListener("pointerenter", handlePointerEnter);
+      marquee.removeEventListener("pointerleave", handlePointerLeave);
+    };
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -201,8 +245,10 @@ export default function AlternatePortfolio() {
             alt="Akhand Veer Singh"
             width={76}
             height={76}
-            className={`size-[76px] shrink-0 rounded-lg border-[3px] object-cover ${
-              lightTheme ? "border-black/10" : "border-white/15"
+            className={`size-[76px] shrink-0 rounded-lg border-[2px] border-white/90  object-cover ${
+              lightTheme
+                ? "shadow-[0_8px_8px_rgba(0,0,0,0.2)]"
+                : "shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
             }`}
           />
           </motion.div>
@@ -242,12 +288,12 @@ export default function AlternatePortfolio() {
           aria-labelledby="about-title"
         >
           {/* <h2 id="about-title" className="font-serif text-[22px] leading-tight">About</h2> */}
-          <ul className="mt-4 list-disc space-y-2.5 pl-4 text-[13px] leading-[1.5] text-current/80 marker:text-current/35">
+          <ul className="mt-4 list-disc space-y-2.5 pl-4 text-[13px] leading-[1.5] text-current/80 marker:text-current/35 text-gray-400">
             <motion.li {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.08 }}>
-              I&apos;m a <strong className="font-semibold text-current">Product Engineer</strong> passionate about crafting digital products where thoughtful design meets clean, scalable code.
+              I&apos;m a <strong className={`font-semibold text-current ${lightTheme? "text-gray-800":"text-white"}`}>Product Engineer</strong> passionate about crafting digital products where thoughtful design meets clean, scalable code.
             </motion.li>
             <motion.li {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.16 }}>
-              I design and develop modern interfaces with <strong className="font-semibold text-current">TypeScript, React, Next.js, and Tailwind CSS</strong>, focusing on usability, performance, and delightful interactions.
+              I design and develop modern interfaces with <strong className={`font-semibold text-current ${lightTheme? "text-gray-800":"text-white"}`}>TypeScript, React, Next.js, and Tailwind CSS</strong>, focusing on usability, performance, and delightful interactions.
             </motion.li>
             <motion.li {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.24 }}>
               I enjoy transforming ideas into polished products, exploring new technologies, refining details, and creating intuitive experiences.
@@ -270,19 +316,15 @@ export default function AlternatePortfolio() {
                 whileHover={shouldReduceMotion ? undefined : { y: -2 }}
                 onHoverStart={() => play("select", { emphasis: "subtle" })}
                 whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
-                className={`social-link grid size-10 place-items-center rounded-xl bg-black border-[2px] transition-colors ${
-                  lightTheme
-                    ? "border-black/15 hover:border-black/40"
-                    : "border-white/15 hover:border-white/40"
-                }`}
+                className={`social-link grid size-10 place-items-center rounded-xl bg-black  transition-colors`}
               >
                 <Image src={icon} alt="" width={20} height={20} className="size-5 object-contain" />
               </motion.a>
             ))}
           </nav>
 
-          <motion.div {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.16 }} className={`mt-3 rounded-lg border-2 p-3 ${
-            lightTheme ? "border-black/[0.08] bg-black/[0.02] hover:border-white/40"  : "border-white/[0.08] bg-white/[0.02] hover:border-white/50"
+          <motion.div id="gitb" {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.16 }} className={`mt-3 rounded-lg border-2 p-3 border-dashed  ${
+            lightTheme ? "border-black/[0.2] bg-black/[0.1] hover:border-gray-700"  : "border-white/[0.08] bg-white/[0.02] hover:border-white/50"
           }`}>
             <div className="flex items-baseline justify-between gap-2">
               <h2 className="font-serif text-sm">GitHub activity</h2>
@@ -306,7 +348,7 @@ export default function AlternatePortfolio() {
                       <motion.span
                         key={date}
                         aria-hidden="true"
-                        className={`size-[9px] rounded-[2px] ${count > 0 ? "relative" : ""}`}
+                        className={`size-[9px] rounded-[2px]  ${count > 0 ? "relative" : ""}`}
                         style={{ backgroundColor: (lightTheme ? lightActivityColors : darkActivityColors)[intensity] }}
                         initial={count > 0 ? "rest" : false}
                         animate={count > 0 ? "rest" : undefined}
@@ -316,7 +358,9 @@ export default function AlternatePortfolio() {
                           hover: {
                             scale: shouldReduceMotion ? 1 : 1.5,
                             zIndex: 30,
-                            boxShadow: "0 0 8px rgba(57, 211, 83, 0.85)",
+                            boxShadow: lightTheme
+                              ? "0 0 8px rgba(0, 0, 0, 0.45)"
+                              : "0 0 8px rgba(57, 211, 83, 0.85)",
                           },
                         }}
                         transition={{ duration: shouldReduceMotion ? 0 : 0.15 }}
@@ -375,7 +419,7 @@ export default function AlternatePortfolio() {
           aria-labelledby="skills-title"
         >
           <h2 id="skills-title" className="mb-3 px-4 font-serif text-[22px] leading-tight sm:px-5  ">Skills</h2>
-          <div className="skills-marquee grid gap-1 border-gray-500 border-dashed border-t border-b p-1 " aria-label="Skills and technologies">
+          <div ref={skillsMarqueeRef} className="skills-marquee grid gap-1 border-gray-500 border-dashed border-t border-b  p-1 " aria-label="Skills and technologies">
             {[false, true].map((reverse) => (
               <div className="skills-marquee-window "  key={reverse ? "right" : "left" }>
                 <div className={`skills-marquee-track ${reverse ? "skills-marquee-track--right" : ""}`}>

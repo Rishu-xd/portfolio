@@ -24,8 +24,13 @@ body {
     display: none;
 }
 
-.portfolio-frame [class*="border"] {
+/* .portfolio-frame [class*="border"] {
     border-style: dashed;
+} */
+
+
+#gitb{
+    transition-duration: 200ms;
 }
 
 .portfolio-frame .social-link {
@@ -81,10 +86,6 @@ body {
 
 .skills-marquee-track--right {
     animation-name: skills-marquee-right;
-}
-
-.skills-marquee:hover .skills-marquee-track {
-    animation-play-state: paused;
 }
 
 .skills-marquee-group {
