@@ -211,13 +211,19 @@ export default function AlternatePortfolio() {
           initial={shouldReduceMotion ? false : { opacity: 0, scaleY: 0.7 }}
           animate={{ opacity: 1, scaleY: 1 }}
           transition={{ duration: shouldReduceMotion ? 0 : 0.55, delay: shouldReduceMotion ? 0 : 0.15 }}
-          className="relative h-[68px] overflow-hidden border-b border-white/10 bg-[#142321]"
+          className="relative h-[100px] rounded-xl overflow-hidden border-b border-white/10 bg-[#142321]"
           aria-hidden="true"
-          style={{
-            backgroundImage:
-              "linear-gradient(180deg, transparent 45%, rgba(7, 11, 13, .48)), radial-gradient(ellipse at 12% 100%, #234438 0 18%, transparent 19%), radial-gradient(ellipse at 36% 110%, #294b3b 0 22%, transparent 23%), radial-gradient(ellipse at 83% 100%, #1c3c35 0 23%, transparent 24%), linear-gradient(112deg, #152522, #49675e 35%, #b7c8bf 51%, #38564d 68%, #182723)",
-          }}
         >
+          <video
+            src="/video/banner.mp4"
+            autoPlay={!shouldReduceMotion}
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            className="absolute inset-0 size-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
           <div className="absolute inset-x-0 top-0 h-px bg-white/15" />
           <motion.div
             initial={false}
