@@ -211,7 +211,11 @@ export default function AlternatePortfolio() {
           initial={shouldReduceMotion ? false : { opacity: 0, scaleY: 0.7 }}
           animate={{ opacity: 1, scaleY: 1 }}
           transition={{ duration: shouldReduceMotion ? 0 : 0.55, delay: shouldReduceMotion ? 0 : 0.15 }}
-          className="relative h-[100px] rounded-xl overflow-hidden border-b border-white/10 bg-[#142321]"
+          className={`relative h-[100px] rounded-xl  ${
+              lightTheme
+                ? "shadow-[0_8px_5px_rgba(0,0,0,0.2)]"
+                : "shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
+            } overflow-hidden border-b border-white/10 bg-[#142321]`}
           aria-hidden="true"
         >
           <video
@@ -485,9 +489,6 @@ export default function AlternatePortfolio() {
          
         </motion.section>
 
-        
-
-        
 
         <motion.section
           {...reveal}
@@ -555,6 +556,8 @@ export default function AlternatePortfolio() {
             ))}
           </div>
         </motion.section>
+
+
 
         <motion.footer {...reveal} transition={{ duration: shouldReduceMotion ? 0 : 0.45 }} viewport={{ once: true, amount: 0.7 }} className={`flex items-center justify-between border-t px-4 py-3 text-[10px] text-current/40 ${
           lightTheme ? "border-black/[0.1]" : "border-white/[0.1]"
