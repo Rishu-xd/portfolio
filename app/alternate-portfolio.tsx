@@ -7,6 +7,9 @@ import {
   Sun,
 } from "lucide-react";
 import { bind, play } from "cuelume";
+import { GlassDock } from "../components/GlassDock";
+import "../components/GlassDock.css";
+
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
@@ -310,28 +313,12 @@ export default function AlternatePortfolio() {
             </motion.li>
           </ul>
 
-          <nav className="mt-4 flex items-center gap-3 sm:gap-4" aria-label="Social links">
-            {contactLinks.map(({ label, href, icon, external }, index) => (
-              <motion.a
-                key={label}
-                href={href}
-                data-cuelume-navigate
-                aria-label={label}
-                target={external ? "_blank" : undefined}
-                rel={external ? "noreferrer" : undefined}
-                initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: shouldReduceMotion ? 0 : 0.25, delay: shouldReduceMotion ? 0 : index * 0.06 }}
-                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                onHoverStart={() => play("select", { emphasis: "subtle" })}
-                whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
-                className={`social-link grid size-10 place-items-center rounded-xl bg-black  transition-colors`}
-              >
-                <Image src={icon} alt="" width={20} height={20} className="size-5 object-contain" />
-              </motion.a>
-            ))}
-          </nav>
+        
+          <GlassDock
+             magnify={1.3}
+             spread={2}
+             lift={10}
+           />
 
           <motion.div id="gitb" {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.16 }} className={`mt-3 rounded-lg border-2 p-3 border-dashed  ${
             lightTheme ? "border-black/[0.2] bg-black/[0.1] hover:border-gray-700"  : "border-white/[0.08] bg-white/[0.02] hover:border-white/50"
