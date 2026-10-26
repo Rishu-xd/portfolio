@@ -10,9 +10,9 @@ import { bind, play } from "cuelume";
 import { GlassDock } from "../components/GlassDock";
 import "../components/GlassDock.css";
 
-
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+
 
 const projects = [
   {
@@ -178,9 +178,19 @@ export default function AlternatePortfolio() {
       }`}
       id="home"
     >
+     
+
+      <div aria-hidden="true">
+ 
+
+      <div className="dot-grid-area" id="dotGridArea"></div>
+      
+</div>
       <div
-        className={`portfolio-frame mx-auto min-h-svh w-full max-w-[628px] `}
+        className={`portfolio-frame mx-auto min-h-svh w-full max-w-[628px]  backdrop-blur-2xl`}
       >
+
+        
         <motion.header
           initial={shouldReduceMotion ? false : { opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -264,6 +274,8 @@ export default function AlternatePortfolio() {
                 : "shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
             }`}
           />
+
+          
           </motion.div>
           <div className="min-w-0">
             <p className="text-[10px] text-current/50">✦</p>
@@ -406,7 +418,7 @@ export default function AlternatePortfolio() {
             </a>
           </motion.div>
         </motion.section>
-
+        
         <motion.section
           {...reveal}
           transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeOut" }}
