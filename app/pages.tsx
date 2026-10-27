@@ -9,7 +9,8 @@ import {
 import { bind, play } from "cuelume";
 import { GlassDock } from "../components/GlassDock";
 import "../components/GlassDock.css";
-
+import { Particles } from "./UI/dots";
+import "./UI/dots.css"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
@@ -173,21 +174,27 @@ export default function AlternatePortfolio() {
       initial={shouldReduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
-      className={`min-h-svh px-3 pb-12 pt-0 transition-colors sm:px-6 ${
-        lightTheme ? "bg-[#f4f3ef] text-[#20211e]" : "bg-[#0b0b0b] text-[#ededed]"
+      className={`relative isolate min-h-svh px-3 pb-12 pt-0 transition-colors sm:px-6  ${
+        lightTheme ? "bg-[#f4f3ef] text-[#20211e]" : "bg-[#0b0b0b] text-[#ededed] "
       }`}
       id="home"
     >
-     
-
       <div aria-hidden="true">
  
 
       <div className="dot-grid-area" id="dotGridArea"></div>
       
 </div>
+    <div className={`particle-background ${lightTheme ? "particle-background--light" : ""}`} aria-hidden="true">
+      <Particles
+          shape="Square"
+          reach={80}
+          force={60}
+          grain="Fine"
+          colorKey={lightTheme ? "light" : "dark"}
+      /></div>
       <div
-        className={`portfolio-frame mx-auto min-h-svh w-full max-w-[628px]  backdrop-blur-2xl`}
+        className={`portfolio-frame relative z-10 mx-auto min-h-svh w-full max-w-[628px] backdrop-blur-2xl`}
       >
 
         
@@ -304,6 +311,11 @@ export default function AlternatePortfolio() {
             Views
           </span>
         </motion.section>
+
+
+
+
+        
         <motion.section
           {...reveal}
           transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeOut" }}
@@ -428,7 +440,7 @@ export default function AlternatePortfolio() {
           aria-labelledby="skills-title"
         >
           <h2 id="skills-title" className="mb-3 px-4 font-serif text-[22px] leading-tight sm:px-5  ">Skills</h2>
-          <div ref={skillsMarqueeRef} className="skills-marquee grid gap-1 border-gray-500 border-dashed border-t border-b  p-1 " aria-label="Skills and technologies">
+          <div ref={skillsMarqueeRef}  className="skills-marquee grid gap-1 border-gray-500 border-dashed border-t border-b  p-1  " aria-label="Skills and technologies">
             {[false, true].map((reverse) => (
               <div className="skills-marquee-window "  key={reverse ? "right" : "left" }>
                 <div className={`skills-marquee-track ${reverse ? "skills-marquee-track--right" : ""}`}>

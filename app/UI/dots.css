@@ -1,0 +1,40 @@
+/* ══ Particles ═════════════════════════════════════════════
+   lab/Particles.tsx. The dots are drawn on a canvas in the
+   element's own `color`, so the ink is set here and the theme
+   carries it. */
+.ptc {
+    position: relative;
+    display: grid;
+    place-items: center;
+}
+
+.ptc-canvas {
+    display: block;
+    color: rgb(237 237 237 / 0.4);
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.particle-background {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: auto;
+}
+
+.particle-background .ptc,
+.particle-background .ptc-canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.particle-background--light .ptc-canvas {
+    color: rgb(32 33 30 / 0.32);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .particle-background {
+        pointer-events: none;
+    }
+}
