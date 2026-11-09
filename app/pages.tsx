@@ -9,8 +9,6 @@ import {
 import { bind, play } from "cuelume";
 import { GlassDock } from "../components/GlassDock";
 import "../components/GlassDock.css";
-import { Particles } from "./UI/dots";
-import "./UI/dots.css"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
@@ -174,25 +172,11 @@ export default function AlternatePortfolio() {
       initial={shouldReduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
-      className={`relative isolate min-h-svh px-3 pb-12 pt-0 transition-colors sm:px-6  ${
+      className={`relative isolate min-h-svh px-3 pb-12 pt-0 transition-colors sm:px-6 backdrop-blur-3xl  ${
         lightTheme ? "bg-[#f4f3ef] text-[#20211e]" : "bg-[#0b0b0b] text-[#ededed] "
       }`}
       id="home"
     >
-      <div aria-hidden="true">
- 
-
-      <div className="dot-grid-area" id="dotGridArea"></div>
-      
-</div>
-    <div className={`particle-background ${lightTheme ? "particle-background--light" : ""}`} aria-hidden="true">
-      <Particles
-          shape="Square"
-          reach={80}
-          force={60}
-          grain="Fine"
-          colorKey={lightTheme ? "light" : "dark"}
-      /></div>
       <div
         className={`portfolio-frame relative z-10 mx-auto min-h-svh w-full max-w-[628px] backdrop-blur-2xl`}
       >
@@ -483,19 +467,8 @@ export default function AlternatePortfolio() {
           }`}
           aria-labelledby="experience-title"
         >
-          <h2 id="experience-title" className="font-serif text-[22px] leading-tight">Experience</h2>
-          <motion.div {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.08 }} className={`mt-3 flex flex-wrap items-center justify-between gap-2 border p-3 ${
-            lightTheme ? "border-black/[0.08] bg-black/[0.02]" : "border-white/[0.08] bg-white/[0.02]"
-          }`}>
-            <div>
-              <p className="text-sm font-medium">Qflow</p>
-              <p className="mt-1 text-xs text-current/50">Queue-management product · Product engineering</p>
-            </div>
-             <div className="flex items-center gap-1 justify-center ">
-              <span className="grid size-2 shrink-0 place-items-center rounded-full border border-current/30 bg-green-500"></span>
-              <span className="text-[10px] text-current/40">In progress</span>
-            </div>
-          </motion.div>
+        
+        
 
          
         </motion.section>
