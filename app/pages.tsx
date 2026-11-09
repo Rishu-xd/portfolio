@@ -10,7 +10,7 @@ import { bind, play } from "cuelume";
 import { GlassDock } from "../components/GlassDock";
 import "../components/GlassDock.css";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 
 const projects = [
@@ -50,19 +50,23 @@ const contactLinks = [
   { label: "Mail", href: "mailto:rishu99xd@gmail.com", icon: "/gmailnew.png", external: false },
 ];
 
+type SkillCategory = "All" | "Backend" | "Frontend" | "Design";
+
+const skillCategories: SkillCategory[] = ["All", "Backend", "Frontend", "Design"];
+
 const skills = [
-  { name: "TypeScript", image: "typescript.png" },
-  { name: "Tailwind CSS", image: "tailwindcss.png" },
-  { name: "Supabase", image: "supabase.png" },
-  { name: "React", image: "react.png" },
-  { name: "Python", image: "python.png" },
-  { name: "PostgreSQL", image: "postgresql.png" },
-  { name: "Node.js", image: "nodejs.png" },
-  { name: "Next.js", image: "next-js.png" },
-  { name: "Git", image: "git.png" },
-  { name: "Docker", image: "docker.png" },
-  { name: "C++", image: "cpp.png" },
-  { name: "C", image: "c-lang.png" },
+  { name: "TypeScript", image: "typescript.png", categories: ["Frontend"] },
+  { name: "Tailwind CSS", image: "tailwindcss.png", categories: ["Frontend", "Design"] },
+  { name: "Supabase", image: "supabase.png", categories: ["Backend"] },
+  { name: "React", image: "react.png", categories: ["Frontend"] },
+  { name: "Python", image: "python.png", categories: ["Backend"] },
+  { name: "PostgreSQL", image: "postgresql.png", categories: ["Backend"] },
+  { name: "Node.js", image: "nodejs.png", categories: ["Backend"] },
+  { name: "Next.js", image: "next-js.png", categories: ["Frontend"] },
+  { name: "Git", image: "git.png", categories: ["Backend", "Frontend"] },
+  { name: "Docker", image: "docker.png", categories: ["Backend"] },
+  { name: "C++", image: "cpp.png", categories: ["Backend"] },
+  { name: "C", image: "c-lang.png", categories: ["Backend"] },
 ];
 
 const roles = ["Full-stack", "Product engineer"];
@@ -80,9 +84,9 @@ const lightActivityColors = ["#f0f0f0", "#d0d0d0", "#a3a3a3", "#737373", "#33333
 export default function AlternatePortfolio() {
   const [lightTheme, setLightTheme] = useState(false);
   const [roleIndex, setRoleIndex] = useState(0);
+  const [skillCategory, setSkillCategory] = useState<SkillCategory>("All");
   const [activity, setActivity] = useState<ContributionActivity | null>(null);
   const [activityError, setActivityError] = useState(false);
-  const skillsMarqueeRef = useRef<HTMLDivElement>(null);
   const shouldReduceMotion = useReducedMotion();
   const reveal = shouldReduceMotion
     ? { initial: false as const, whileInView: undefined }
@@ -100,49 +104,6 @@ export default function AlternatePortfolio() {
   }, []);
 
   useEffect(() => bind(), []);
-
-  useEffect(() => {
-    const marquee = skillsMarqueeRef.current;
-    if (!marquee) return;
-
-    const animations = Array.from(
-      marquee.querySelectorAll(".skills-marquee-track"),
-    ).flatMap((track) => track.getAnimations());
-    const duration = 600;
-    let playbackRate = 1;
-    let animationFrame = 0;
-
-    const rampPlaybackRate = (targetRate: number) => {
-      window.cancelAnimationFrame(animationFrame);
-
-      const startRate = playbackRate;
-      const startTime = performance.now();
-
-      const updatePlaybackRate = (time: number) => {
-        const progress = Math.min((time - startTime) / duration, 1);
-        playbackRate = startRate + (targetRate - startRate) * progress;
-        animations.forEach((animation) => animation.updatePlaybackRate(playbackRate));
-
-        if (progress < 1) {
-          animationFrame = window.requestAnimationFrame(updatePlaybackRate);
-        }
-      };
-
-      animationFrame = window.requestAnimationFrame(updatePlaybackRate);
-    };
-
-    const handlePointerEnter = () => rampPlaybackRate(0);
-    const handlePointerLeave = () => rampPlaybackRate(1);
-
-    marquee.addEventListener("pointerenter", handlePointerEnter);
-    marquee.addEventListener("pointerleave", handlePointerLeave);
-
-    return () => {
-      window.cancelAnimationFrame(animationFrame);
-      marquee.removeEventListener("pointerenter", handlePointerEnter);
-      marquee.removeEventListener("pointerleave", handlePointerLeave);
-    };
-  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -287,13 +248,7 @@ export default function AlternatePortfolio() {
             </p>
             <p className="mt-1 text-[10px] text-current/40">India</p>
           </div>
-          <span className="ml-auto hidden items-center gap-1 text-[10px] text-current/35 sm:flex" aria-label="Portfolio profile">
-            <svg className="size-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M1.7 8s2.3-4 6.3-4 6.3 4 6.3 4-2.3 4-6.3 4-6.3-4-6.3-4Z" stroke="currentColor" />
-              <circle cx="8" cy="8" r="1.7" stroke="currentColor" />
-            </svg>
-            Views
-          </span>
+        
         </motion.section>
 
 
@@ -423,37 +378,57 @@ export default function AlternatePortfolio() {
           className={`overflow-hidden py-4 `}
           aria-labelledby="skills-title"
         >
-          <h2 id="skills-title" className="mb-3 px-4 font-serif text-[22px] leading-tight sm:px-5  ">Skills</h2>
-          <div ref={skillsMarqueeRef}  className="skills-marquee grid gap-1 border-gray-500 border-dashed border-t border-b  p-1  " aria-label="Skills and technologies">
-            {[false, true].map((reverse) => (
-              <div className="skills-marquee-window "  key={reverse ? "right" : "left" }>
-                <div className={`skills-marquee-track ${reverse ? "skills-marquee-track--right" : ""}`}>
-                  {[0, 1].map((copy) => (
-                    <div className="skills-marquee-group" key={copy} aria-hidden={copy === 1}>
-                      {skills.map((skill) => (
-                        <div
-                          className={`flex h-10 w-[104px] shrink-0 items-center cursor-pointer gap-2 rounded-md border border-dashed px-2 transition-colors duration-200 ${
-                            lightTheme
-                              ? "border-black/20 hover:border-gray-300 hover:bg-emerald-700/10 hover:text-gray-300"
-                              : "border-white/20 hover:border-gray-300 hover:bg-lime-300/10 hover:text-gray-300"
-                          }`}
-                          key={skill.name}
-                        >
-                          <Image
-                            src={`/skills/${skill.image}`}
-                            alt=""
-                            width={25}
-                            height={25}
-                            className="size-6 shrink-0 object-contain"
-                          />
-                          <span className="text-[12px] leading-tight text-current/75 ">{skill.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5">
+            <h2 id="skills-title" className="font-serif text-[22px] leading-tight">Tech Stack</h2>
+            <nav className="flex flex-wrap gap-1" aria-label="Filter tech stack">
+              {skillCategories.map((category) => (
+                <button
+                  type="button"
+                  key={category}
+                  aria-pressed={skillCategory === category}
+                  onClick={() => setSkillCategory(category)}
+                  className={`rounded-md border border-dashed px-2.5 py-1 text-[10px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                    skillCategory === category
+                      ? lightTheme
+                        ? "border-black/50 bg-black/10 text-current"
+                        : "border-white/50 bg-white/10 text-current"
+                      : "border-current/20 text-current/55 hover:border-current/45 hover:text-current"
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </nav>
+          </div>
+          <div
+            role="group"
+            aria-label="Technologies"
+            className="flex h-[17rem] flex-wrap content-start gap-2 rounded-[7px] border-2 border-dashed border-[#242f28] p-3 hover:border-[#728077] sm:h-[9rem] lg:h-[7rem]"
+          >
+            {skills
+              .filter((skill) => skillCategory === "All" || skill.categories.includes(skillCategory))
+              .map((skill) => (
+                <motion.button
+                  type="button"
+                  whileHover={shouldReduceMotion ? undefined : { scale: 1.03 }}
+                  whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+                  className={`group flex h-8 w-full basis-[48%] items-center justify-center gap-2 rounded-[7px] border px-3 grayscale transition duration-200 hover:grayscale-0 focus-visible:grayscale-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 sm:basis-[23%] lg:w-max lg:basis-auto ${
+                    lightTheme
+                      ? "border-black/20  hover:bg-gray-900"
+                      : "border-white/20  hover:bg-lime-300/10"
+                  }`}
+                  key={skill.name}
+                >
+                  <Image
+                    src={`/skills/${skill.image}`}
+                    alt=""
+                    width={25}
+                    height={25}
+                    className="size-4 shrink-0 object-contain"
+                  />
+                  <span className="text-[10px] leading-tight text-current/75">{skill.name}</span>
+                </motion.button>
+              ))}
           </div>
         </motion.section>
 
