@@ -26,6 +26,10 @@ import { ThreeArtifact } from "../components/ThreeArtifact";
 import { PhysicsSkillArena } from "../components/PhysicsSkillArena";
 import { ModeSwitcher } from "../components/ModeSwitcher";
 import {
+  LiquidGlass,
+  LiquidGlassButton,
+} from "../components/ui/apple-tahoe-liquid-glass-button";
+import {
   PROFILE,
   PROJECTS,
   ENGINEERING_LOG,
@@ -62,8 +66,44 @@ export default function InteractivePortfolio() {
   const [spotify, setSpotify] = useState<SpotifyState | null>(null);
   const [clockStr, setClockStr] = useState<string>("--:--:-- IST");
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [activeSectionTitle, setActiveSectionTitle] = useState<string | null>(null);
+  const [navHovered, setNavHovered] = useState(false);
 
   const shouldReduceMotion = useReducedMotion();
+
+  // Track scroll position to morph navbar between Hero controls and Section title
+  useEffect(() => {
+    const updateActiveSection = () => {
+      const y = window.scrollY;
+      if (y < 220) {
+        setActiveSectionTitle(null);
+        return;
+      }
+
+      const sections: { id: string; title: string }[] = [
+        { id: "telemetry", title: "Execution Log & Live Signals" },
+        { id: "physics", title: "Physics Lab" },
+        { id: "projects", title: "Selected Engineering Work" },
+      ];
+
+      const triggerLine = window.innerHeight * 0.34;
+      for (const sec of sections) {
+        const el = document.getElementById(sec.id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= triggerLine) {
+            setActiveSectionTitle(sec.title);
+            return;
+          }
+        }
+      }
+      setActiveSectionTitle("Selected Engineering Work");
+    };
+
+    updateActiveSection();
+    window.addEventListener("scroll", updateActiveSection, { passive: true });
+    return () => window.removeEventListener("scroll", updateActiveSection);
+  }, []);
 
   useEffect(() => {
     const unbind = bind();
@@ -128,7 +168,7 @@ export default function InteractivePortfolio() {
         const data = (await res.json()) as { repos?: GitHubRepoSummary[] };
         if (data.repos) setLiveRepos(data.repos);
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => controller.abort();
   }, []);
 
@@ -140,7 +180,7 @@ export default function InteractivePortfolio() {
         const data = (await res.json()) as SpotifyState;
         setSpotify(data);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const filteredProjects =
@@ -173,11 +213,10 @@ export default function InteractivePortfolio() {
 
   return (
     <div
-      className={`relative min-h-svh pb-24 transition-colors duration-300 ${
-        lightTheme
+      className={`relative min-h-svh pb-24 transition-colors duration-300 ${lightTheme
           ? "bg-white text-black selection:bg-black selection:text-white"
           : "bg-black text-white selection:bg-white selection:text-black"
-      }`}
+        }`}
     >
       {/* Subtle monochrome grid lines */}
       <div
@@ -191,108 +230,151 @@ export default function InteractivePortfolio() {
         }}
       />
 
-      {/* Top System Telemetry Strip */}
+      {/* Fixed-Shape Liquid Glass Navbar — Keeps exact pill dimensions so refraction stays crisp */}
       <header
-        className={`sticky top-0 z-40 border-b backdrop-blur-md transition-colors ${
-          lightTheme
-            ? "border-black/15 bg-white/90"
-            : "border-white/15 bg-black/90"
-        }`}
+        onMouseEnter={() => setNavHovered(true)}
+        onMouseLeave={() => setNavHovered(false)}
+        className="sticky top-3 z-40 mx-auto flex justify-center px-4"
       >
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-2.5 sm:px-6">
-          <div className="flex items-center gap-3">
-            <a
-              href="#top"
-              data-cuelume-navigate
-              className="font-serif text-lg tracking-tight font-normal"
-            >
-              Akhand Veer Singh
-            </a>
-            <span
-              className={`hidden rounded-[2px] border px-1.5 py-0.5 font-mono text-[10px] sm:inline-block ${
-                lightTheme
-                  ? "border-black/25 bg-black/5 text-black"
-                  : "border-white/25 bg-white/10 text-white"
-              }`}
-            >
-              @{PROFILE.handle}
-            </span>
-          </div>
+        <LiquidGlass
+          material="regular"
+          appearance={lightTheme ? "light" : "dark"}
+          refraction={24}
+          bezel={20}
+          blur={2}
+          className={`flex h-9 w-[310px] items-center justify-center overflow-hidden rounded-full border px-3.5 font-mono text-[11px] sm:w-[340px] ${
+            lightTheme
+              ? "border-black/15 text-black"
+              : "border-white/20 text-white"
+          }`}
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            {activeSectionTitle && !navHovered ? (
+              <motion.a
+                key={`sec-${activeSectionTitle}`}
+                href="#top"
+                initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 26,
+                }}
+                className="flex w-full items-center justify-center gap-2 whitespace-nowrap"
+                title="Hover to show navigation links or click to return to top"
+              >
+                <span className="size-1.5 shrink-0 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="truncate font-serif text-[15px] leading-none tracking-tight">
+                  {activeSectionTitle}
+                </span>
+              </motion.a>
+            ) : (
+              <motion.div
+                key="hero-nav"
+                initial={{ opacity: 0, y: -12, filter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 26,
+                }}
+                className="flex w-full items-center justify-between gap-2 whitespace-nowrap"
+              >
+                <a
+                  href="#top"
+                  data-cuelume-navigate
+                  className="font-serif text-base leading-none tracking-tight"
+                >
+                  Rishu
+                </a>
 
-          {/* Center navigation */}
-          <nav
-            aria-label="Primary sections"
-            className="hidden items-center gap-5 font-mono text-[11px] uppercase tracking-wider md:flex"
-          >
-            <a
-              href="#projects"
-              data-cuelume-navigate
-              className="opacity-65 transition-opacity hover:opacity-100"
-            >
-              [01] Work ({PROJECTS.length})
-            </a>
-            <a
-              href="#physics"
-              data-cuelume-navigate
-              className="opacity-65 transition-opacity hover:opacity-100"
-            >
-              [02] Physics Lab
-            </a>
-            <a
-              href="#telemetry"
-              data-cuelume-navigate
-              className="opacity-65 transition-opacity hover:opacity-100"
-            >
-              [03] Telemetry
-            </a>
-            <Link
-              href="/minimal"
-              data-cuelume-navigate
-              className="opacity-65 transition-opacity hover:opacity-100"
-            >
-              [04] 1-Page Index
-            </Link>
-            <Link
-              href="/llm"
-              data-cuelume-navigate
-              className="opacity-65 transition-opacity hover:opacity-100"
-            >
-              [05] LLM Wiki
-            </Link>
-          </nav>
+                <div
+                  className={`h-3 w-px shrink-0 ${
+                    lightTheme ? "bg-black/20" : "bg-white/20"
+                  }`}
+                  aria-hidden="true"
+                />
 
-          {/* Right telemetry + Tactile Theme Toggle */}
-          <div className="flex items-center gap-2.5 font-mono text-[11px]">
-            <span className="hidden items-center gap-1.5 opacity-75 sm:inline-flex">
-              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              {clockStr}
-            </span>
+                <nav
+                  aria-label="Primary sections"
+                  className="flex items-center gap-1"
+                >
+                  <a
+                    href="#projects"
+                    data-cuelume-navigate
+                    className={`rounded-full px-2 py-0.5 transition-colors ${
+                      lightTheme
+                        ? "text-black/70 hover:bg-black/10 hover:text-black"
+                        : "text-white/70 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    Work
+                  </a>
+                  <a
+                    href="#physics"
+                    data-cuelume-navigate
+                    className={`rounded-full px-2 py-0.5 transition-colors ${
+                      lightTheme
+                        ? "text-black/70 hover:bg-black/10 hover:text-black"
+                        : "text-white/70 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    Lab
+                  </a>
+                  <a
+                    href="#telemetry"
+                    data-cuelume-navigate
+                    className={`rounded-full px-2 py-0.5 transition-colors ${
+                      lightTheme
+                        ? "text-black/70 hover:bg-black/10 hover:text-black"
+                        : "text-white/70 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    Log
+                  </a>
+                </nav>
 
-            <button
-              type="button"
-              onClick={() => {
-                setLightTheme((v) => !v);
-                play("toggle");
-              }}
-              aria-label={lightTheme ? "Switch to dark mode" : "Switch to light mode"}
-              className={`inline-flex items-center gap-1.5 rounded-sm border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
-                lightTheme
-                  ? "border-black bg-black text-white"
-                  : "border-white bg-white text-black"
-              }`}
-            >
-              {lightTheme ? (
-                <>
-                  <Sun className="size-3" /> WHITE
-                </>
-              ) : (
-                <>
-                  <Moon className="size-3" /> BLACK
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+                <div
+                  className={`h-3 w-px shrink-0 ${
+                    lightTheme ? "bg-black/20" : "bg-white/20"
+                  }`}
+                  aria-hidden="true"
+                />
+
+                <div className="flex items-center gap-1.5">
+                  <span className="hidden items-center gap-1 text-[10px] opacity-70 sm:inline-flex">
+                    <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    {clockStr.slice(0, 5)}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLightTheme((v) => !v);
+                      play("toggle");
+                    }}
+                    aria-label={
+                      lightTheme ? "Switch to dark mode" : "Switch to light mode"
+                    }
+                    className={`grid size-6 place-items-center rounded-full border transition-colors ${
+                      lightTheme
+                        ? "border-black/20 text-black hover:bg-black/10"
+                        : "border-white/25 text-white hover:bg-white/10"
+                    }`}
+                  >
+                    {lightTheme ? (
+                      <Sun className="size-3" />
+                    ) : (
+                      <Moon className="size-3" />
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </LiquidGlass>
       </header>
 
       <main id="top" className="relative z-10 mx-auto max-w-5xl px-4 pt-6 sm:px-6 sm:pt-10">
@@ -303,11 +385,10 @@ export default function InteractivePortfolio() {
         >
           {/* Left 7 columns: Identity Card */}
           <div
-            className={`flex flex-col justify-between rounded-sm border p-5 sm:p-6 lg:col-span-7 ${
-              lightTheme
+            className={`flex flex-col justify-between rounded-sm border p-5 sm:p-6 lg:col-span-7 ${lightTheme
                 ? "border-black/20 bg-neutral-50"
                 : "border-white/20 bg-neutral-950"
-            }`}
+              }`}
           >
             <div>
               {/* Video Banner Strip in full natural color */}
@@ -414,11 +495,10 @@ export default function InteractivePortfolio() {
                 <button
                   type="button"
                   onClick={copyEmail}
-                  className={`inline-flex items-center gap-1.5 rounded-sm border px-3 py-1.5 transition-colors ${
-                    lightTheme
+                  className={`inline-flex items-center gap-1.5 rounded-sm border px-3 py-1.5 transition-colors ${lightTheme
                       ? "border-black/25 bg-black/5 hover:bg-black hover:text-white"
                       : "border-white/25 bg-white/5 hover:bg-white hover:text-black"
-                  }`}
+                    }`}
                 >
                   {copiedEmail ? (
                     <>
@@ -440,22 +520,20 @@ export default function InteractivePortfolio() {
 
             {/* Multi-View Switcher Callout Card */}
             <div
-              className={`flex flex-col justify-between rounded-sm border p-4 font-mono text-xs ${
-                lightTheme
+              className={`flex flex-col justify-between rounded-sm border p-4 font-mono text-xs ${lightTheme
                   ? "border-black/20 bg-neutral-50"
                   : "border-white/20 bg-neutral-950"
-              }`}
+                }`}
             >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] uppercase tracking-wider opacity-70">
                   PORTFOLIO ARCHITECTURE // 3 SURFACES
                 </span>
                 <span
-                  className={`rounded-[2px] px-1.5 py-0.5 text-[9px] font-bold ${
-                    lightTheme
+                  className={`rounded-[2px] px-1.5 py-0.5 text-[9px] font-bold ${lightTheme
                       ? "bg-black text-white"
                       : "bg-white text-black"
-                  }`}
+                    }`}
                 >
                   KEY: 1 / 2 / 3
                 </span>
@@ -467,11 +545,10 @@ export default function InteractivePortfolio() {
                 <Link
                   href="/minimal"
                   data-cuelume-navigate
-                  className={`flex items-center justify-between rounded-[2px] border px-2.5 py-2 text-[11px] transition-colors ${
-                    lightTheme
+                  className={`flex items-center justify-between rounded-[2px] border px-2.5 py-2 text-[11px] transition-colors ${lightTheme
                       ? "border-black/25 hover:bg-black hover:text-white"
                       : "border-white/25 hover:bg-white hover:text-black"
-                  }`}
+                    }`}
                 >
                   <span className="inline-flex items-center gap-1.5">
                     <Terminal className="size-3.5" /> 02. Minimal 1-Page
@@ -481,11 +558,10 @@ export default function InteractivePortfolio() {
                 <Link
                   href="/llm"
                   data-cuelume-navigate
-                  className={`flex items-center justify-between rounded-[2px] border px-2.5 py-2 text-[11px] transition-colors ${
-                    lightTheme
+                  className={`flex items-center justify-between rounded-[2px] border px-2.5 py-2 text-[11px] transition-colors ${lightTheme
                       ? "border-black/25 hover:bg-black hover:text-white"
                       : "border-white/25 hover:bg-white hover:text-black"
-                  }`}
+                    }`}
                 >
                   <span className="inline-flex items-center gap-1.5">
                     <Layers className="size-3.5" /> 03. LLM / Wiki
@@ -520,13 +596,12 @@ export default function InteractivePortfolio() {
                       setProjectFilter(cat);
                       play("select");
                     }}
-                    className={`rounded-sm border px-2.5 py-1 transition-colors ${
-                      projectFilter === cat
+                    className={`rounded-sm border px-2.5 py-1 transition-colors ${projectFilter === cat
                         ? lightTheme
                           ? "border-black bg-black text-white font-semibold"
                           : "border-white bg-white text-black font-semibold"
                         : "border-current/20 opacity-65 hover:opacity-100"
-                    }`}
+                      }`}
                   >
                     {cat === "ALL" ? `ALL (${PROJECTS.length})` : cat}
                   </button>
@@ -547,24 +622,21 @@ export default function InteractivePortfolio() {
                   whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.15 }}
                   transition={{ duration: 0.3, delay: idx * 0.04 }}
-                  className={`group relative flex flex-col justify-between rounded-sm border p-5 transition-colors ${
-                    isFeatured ? "md:col-span-2" : ""
-                  } ${
-                    lightTheme
+                  className={`group relative flex flex-col justify-between rounded-sm border p-5 transition-colors ${isFeatured ? "md:col-span-2" : ""
+                    } ${lightTheme
                       ? "border-black/20 bg-neutral-50 hover:border-black"
                       : "border-white/20 bg-neutral-950 hover:border-white"
-                  }`}
+                    }`}
                 >
                   <div>
                     {/* Top metadata row */}
                     <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[11px]">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`rounded-[2px] px-1.5 py-0.5 text-[10px] font-bold ${
-                            lightTheme
+                          className={`rounded-[2px] px-1.5 py-0.5 text-[10px] font-bold ${lightTheme
                               ? "bg-black text-white"
                               : "bg-white text-black"
-                          }`}
+                            }`}
                         >
                           {project.number}
                         </span>
@@ -577,11 +649,10 @@ export default function InteractivePortfolio() {
 
                       <div className="flex items-center gap-2">
                         <span
-                          className={`rounded-[2px] border px-1.5 py-0.5 text-[9px] uppercase ${
-                            project.status === "LIVE"
+                          className={`rounded-[2px] border px-1.5 py-0.5 text-[9px] uppercase ${project.status === "LIVE"
                               ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-500 font-semibold"
                               : "border-current/25 opacity-70"
-                          }`}
+                            }`}
                         >
                           ● {project.status}
                         </span>
@@ -615,9 +686,8 @@ export default function InteractivePortfolio() {
                     </p>
 
                     <div
-                      className={`mt-3 rounded-sm border-l-2 pl-3 font-mono text-[11px] leading-relaxed opacity-75 ${
-                        lightTheme ? "border-black/50" : "border-white/50"
-                      }`}
+                      className={`mt-3 rounded-sm border-l-2 pl-3 font-mono text-[11px] leading-relaxed opacity-75 ${lightTheme ? "border-black/50" : "border-white/50"
+                        }`}
                     >
                       <span className="font-semibold uppercase">Arch: </span>
                       {project.architecture}
@@ -690,11 +760,10 @@ export default function InteractivePortfolio() {
                     target="_blank"
                     rel="noreferrer"
                     data-cuelume-navigate
-                    className={`flex flex-col justify-between rounded-sm border p-3 transition-colors ${
-                      lightTheme
+                    className={`flex flex-col justify-between rounded-sm border p-3 transition-colors ${lightTheme
                         ? "border-black/15 bg-white hover:border-black"
                         : "border-white/15 bg-black hover:border-white"
-                    }`}
+                      }`}
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2 font-mono text-xs font-semibold">
@@ -761,11 +830,10 @@ export default function InteractivePortfolio() {
             {/* GitHub Heatmap + Spotify Signal (7 cols) */}
             <div className="flex flex-col justify-between gap-4 lg:col-span-7">
               <div
-                className={`rounded-sm border p-4 ${
-                  lightTheme
+                className={`rounded-sm border p-4 ${lightTheme
                     ? "border-black/20 bg-neutral-50"
                     : "border-white/20 bg-neutral-950"
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between font-mono text-xs">
                   <span className="font-semibold uppercase">
@@ -818,19 +886,17 @@ export default function InteractivePortfolio() {
 
               {/* Live Audio / Spotify Telemetry Card */}
               <div
-                className={`flex items-center justify-between gap-4 rounded-sm border p-4 font-mono text-xs ${
-                  lightTheme
+                className={`flex items-center justify-between gap-4 rounded-sm border p-4 font-mono text-xs ${lightTheme
                     ? "border-black/20 bg-neutral-50"
                     : "border-white/20 bg-neutral-950"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`flex size-10 items-center justify-center rounded-sm border ${
-                      lightTheme
+                    className={`flex size-10 items-center justify-center rounded-sm border ${lightTheme
                         ? "border-black bg-black text-white"
                         : "border-white bg-white text-black"
-                    }`}
+                      }`}
                   >
                     <Radio className="size-4 animate-pulse" />
                   </div>
@@ -861,11 +927,10 @@ export default function InteractivePortfolio() {
 
             {/* Engineering Log (5 cols) */}
             <div
-              className={`rounded-sm border p-5 lg:col-span-5 ${
-                lightTheme
+              className={`rounded-sm border p-5 lg:col-span-5 ${lightTheme
                   ? "border-black/20 bg-neutral-50"
                   : "border-white/20 bg-neutral-950"
-              }`}
+                }`}
             >
               <div className="font-mono text-xs font-semibold uppercase tracking-wider">
                 CHRONOLOGY // BUILD LOG

@@ -12,6 +12,9 @@ import {
   SOCIAL_LINKS,
 } from "../data/portfolio";
 import { ModeSwitcher } from "../../components/ModeSwitcher";
+import {
+  LiquidGlass,
+} from "../../components/ui/apple-tahoe-liquid-glass-button";
 
 export default function MinimalPortfolioPage() {
   const [light, setLight] = useState(true);
@@ -36,43 +39,63 @@ export default function MinimalPortfolioPage() {
       }`}
     >
       <div className="mx-auto flex h-full max-w-[1380px] flex-col justify-between px-4 pb-16 pt-3 sm:px-6 lg:pb-14 lg:pt-4">
-        {/* TOP COMPACT BAR */}
-        <header
-          className={`flex shrink-0 items-center justify-between border-b pb-2.5 font-mono text-[11px] ${
-            light ? "border-black/20" : "border-white/20"
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <span
-              className={`rounded-[2px] px-1.5 py-0.5 text-[10px] font-bold ${
-                light
-                  ? "bg-black text-white"
-                  : "bg-white text-black"
-              }`}
-            >
-              INDEX // 02
+        {/* TOP COMPACT LIQUID GLASS NAVBAR */}
+        <header className="flex shrink-0 items-center justify-center pb-1">
+          <LiquidGlass
+            material="regular"
+            appearance={light ? "light" : "dark"}
+            refraction={24}
+            bezel={20}
+            blur={2}
+            className={`flex h-9 items-center gap-3 rounded-full border px-3.5 font-mono text-[11px] ${
+              light
+                ? "border-black/15 text-black"
+                : "border-white/20 text-white"
+            }`}
+          >
+            <span className="font-serif text-base leading-none tracking-tight">
+              Rishu
             </span>
-            <span className="font-semibold tracking-tight">{PROFILE.name}</span>
-            <span className="hidden opacity-55 sm:inline">
-              — {PROFILE.role} ({PROFILE.location})
-            </span>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              data-cuelume-navigate
-              className="underline decoration-current/35 underline-offset-4 opacity-70 hover:opacity-100"
-            >
-              01.Interactive
-            </Link>
-            <Link
-              href="/llm"
-              data-cuelume-navigate
-              className="underline decoration-current/35 underline-offset-4 opacity-70 hover:opacity-100"
-            >
-              03.LLM-Wiki
-            </Link>
+            <div
+              className={`h-3 w-px ${
+                light ? "bg-black/20" : "bg-white/20"
+              }`}
+              aria-hidden="true"
+            />
+
+            <nav className="flex items-center gap-1">
+              <Link
+                href="/"
+                data-cuelume-navigate
+                className={`rounded-full px-2 py-0.5 transition-colors ${
+                  light
+                    ? "text-black/70 hover:bg-black/10 hover:text-black"
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                Lab
+              </Link>
+              <Link
+                href="/llm"
+                data-cuelume-navigate
+                className={`rounded-full px-2 py-0.5 transition-colors ${
+                  light
+                    ? "text-black/70 hover:bg-black/10 hover:text-black"
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                LLM
+              </Link>
+            </nav>
+
+            <div
+              className={`h-3 w-px ${
+                light ? "bg-black/20" : "bg-white/20"
+              }`}
+              aria-hidden="true"
+            />
+
             <button
               type="button"
               onClick={() => {
@@ -80,16 +103,15 @@ export default function MinimalPortfolioPage() {
                 play("toggle");
               }}
               aria-label="Toggle color theme"
-              className={`inline-flex items-center gap-1 rounded-[2px] border px-2 py-0.5 text-[10px] uppercase ${
+              className={`grid size-6 place-items-center rounded-full border transition-colors ${
                 light
-                  ? "border-black bg-black text-white"
-                  : "border-white bg-white text-black"
+                  ? "border-black/20 text-black hover:bg-black/10"
+                  : "border-white/25 text-white hover:bg-white/10"
               }`}
             >
               {light ? <Sun className="size-3" /> : <Moon className="size-3" />}
-              {light ? "WHITE" : "BLACK"}
             </button>
-          </div>
+          </LiquidGlass>
         </header>
 
         {/* CENTER BENTO LEDGER — FITS IN 1 SCREEN ON DESKTOP */}

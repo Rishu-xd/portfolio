@@ -19,6 +19,75 @@ type Body = {
 
 type GravityMode = "EARTH" | "ZERO_G" | "ATTRACTOR";
 
+// Shared Web Audio Context for Realistic Glass Marble Clink Synthesis
+let marbleAudioCtx: AudioContext | null = null;
+let lastMarbleSoundTime = 0;
+
+function playMarbleClink(impactSpeed: number, massA = 1.2, massB = 1.2) {
+  if (typeof window === "undefined") return;
+  const nowPerf = performance.now();
+  // Throttle slightly so simultaneous multi-ball pileups don't clip the audio output
+  if (nowPerf - lastMarbleSoundTime < 22) return;
+
+  const intensity = Math.min(1, Math.max(0.05, (impactSpeed - 0.65) / 14));
+  if (intensity <= 0.06) return;
+  lastMarbleSoundTime = nowPerf;
+
+  try {
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!marbleAudioCtx) {
+      marbleAudioCtx = new AudioCtx();
+    }
+    if (marbleAudioCtx.state === "suspended") {
+      marbleAudioCtx.resume();
+    }
+
+    const t = marbleAudioCtx.currentTime;
+    // Larger mass = slightly lower fundamental pitch; add slight organic variation
+    const avgMass = (massA + massB) * 0.5;
+    const pitchFactor = (1.25 / avgMass) * (0.94 + Math.random() * 0.12);
+    const f1 = 2350 * pitchFactor;
+    const f2 = f1 * 2.72; // Glass sphere inharmonic overtone mode
+
+    // Mode 1: Primary glass marble ring
+    const osc1 = marbleAudioCtx.createOscillator();
+    const gain1 = marbleAudioCtx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(f1, t);
+    osc1.frequency.exponentialRampToValueAtTime(f1 * 0.96, t + 0.055);
+
+    gain1.gain.setValueAtTime(0.0001, t);
+    gain1.gain.linearRampToValueAtTime(intensity * 0.24, t + 0.0012);
+    gain1.gain.exponentialRampToValueAtTime(0.0001, t + 0.055);
+
+    osc1.connect(gain1);
+    gain1.connect(marbleAudioCtx.destination);
+    osc1.start(t);
+    osc1.stop(t + 0.06);
+
+    // Mode 2: High crystalline click overtone
+    const osc2 = marbleAudioCtx.createOscillator();
+    const gain2 = marbleAudioCtx.createGain();
+    osc2.type = "triangle";
+    osc2.frequency.setValueAtTime(f2, t);
+
+    gain2.gain.setValueAtTime(0.0001, t);
+    gain2.gain.linearRampToValueAtTime(intensity * 0.14, t + 0.0008);
+    gain2.gain.exponentialRampToValueAtTime(0.0001, t + 0.022);
+
+    osc2.connect(gain2);
+    gain2.connect(marbleAudioCtx.destination);
+    osc2.start(t);
+    osc2.stop(t + 0.025);
+  } catch {
+    // Ignore audio errors if user hasn't interacted yet
+  }
+}
+
 export function PhysicsSkillArena({ light = false }: { light?: boolean }) {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const pillRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -60,7 +129,10 @@ export function PhysicsSkillArena({ light = false }: { light?: boolean }) {
       const row = Math.floor(idx / cols);
       return {
         skill,
-        x: Math.min(W - r - 10, Math.max(r + 10, 75 + col * ((W - 130) / Math.max(1, cols - 1)))),
+        x: Math.min(
+          W - r - 10,
+          Math.max(r + 10, 75 + col * ((W - 130) / Math.max(1, cols - 1)))
+        ),
         y: Math.min(H - r - 10, Math.max(r + 10, 50 + row * 72)),
         vx: (Math.random() - 0.5) * 4,
         vy: (Math.random() - 0.5) * 2,
@@ -107,9 +179,8 @@ export function PhysicsSkillArena({ light = false }: { light?: boolean }) {
           b.vx += (dx / dist) * 0.32;
           b.vy += (dy / dist) * 0.32;
         } else {
-          // ZERO_G subtle drift
-          b.vx += (Math.sin(Date.now() * 0.001 + i) * 0.015);
-          b.vy += (Math.cos(Date.now() * 0.0012 + i) * 0.015);
+          b.vx += Math.sin(Date.now() * 0.001 + i) * 0.015;
+          b.vy += Math.cos(Date.now() * 0.0012 + i) * 0.015;
         }
 
         b.vx *= 0.985;
@@ -122,27 +193,35 @@ export function PhysicsSkillArena({ light = false }: { light?: boolean }) {
         // Boundary elastic restitution
         const bounce = 0.72;
         if (b.x - b.r < 6) {
+          const impact = Math.abs(b.vx);
+          if (impact > 1.8) playMarbleClink(impact * 0.7, b.skill.mass, 1.4);
           b.x = b.r + 6;
           b.vx = Math.abs(b.vx) * bounce;
           b.vAngle += b.vy * 0.002;
         } else if (b.x + b.r > w - 6) {
+          const impact = Math.abs(b.vx);
+          if (impact > 1.8) playMarbleClink(impact * 0.7, b.skill.mass, 1.4);
           b.x = w - 6 - b.r;
           b.vx = -Math.abs(b.vx) * bounce;
           b.vAngle -= b.vy * 0.002;
         }
 
         if (b.y - b.r < 6) {
+          const impact = Math.abs(b.vy);
+          if (impact > 1.8) playMarbleClink(impact * 0.7, b.skill.mass, 1.4);
           b.y = b.r + 6;
           b.vy = Math.abs(b.vy) * bounce;
         } else if (b.y + b.r > h - 6) {
+          const impact = Math.abs(b.vy);
+          if (impact > 2.0) playMarbleClink(impact * 0.65, b.skill.mass, 1.5);
           b.y = h - 6 - b.r;
           b.vy = -Math.abs(b.vy) * bounce;
-          b.vx *= 0.94; // floor friction
+          b.vx *= 0.94;
           b.vAngle = b.vx * 0.004;
         }
       }
 
-      // Pairwise elastic collision resolution
+      // Pairwise elastic collision resolution + Marble Clink Sound
       for (let i = 0; i < bodies.length; i++) {
         for (let j = i + 1; j < bodies.length; j++) {
           const a = bodies[i];
@@ -172,7 +251,14 @@ export function PhysicsSkillArena({ light = false }: { light?: boolean }) {
 
             const kx = a.vx - b.vx;
             const ky = a.vy - b.vy;
-            const p = 2 * (nx * kx + ny * ky) / (a.skill.mass + b.skill.mass);
+            const normalVel = nx * kx + ny * ky;
+
+            // Play marble collision sound proportional to relative closing speed
+            if (normalVel > 0.65) {
+              playMarbleClink(normalVel, a.skill.mass, b.skill.mass);
+            }
+
+            const p = (2 * normalVel) / (a.skill.mass + b.skill.mass);
 
             if (i !== draggedIdx) {
               a.vx -= p * b.skill.mass * nx * 0.82;
@@ -201,7 +287,7 @@ export function PhysicsSkillArena({ light = false }: { light?: boolean }) {
   }, [categoryFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const triggerBlast = () => {
-    play("open");
+    playMarbleClink(12, 1.1, 1.3);
     bodiesRef.current.forEach((b) => {
       b.vx = (Math.random() - 0.5) * 24;
       b.vy = -8 - Math.random() * 16;
@@ -225,7 +311,7 @@ export function PhysicsSkillArena({ light = false }: { light?: boolean }) {
       >
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="mr-1 font-semibold tracking-wider uppercase opacity-80">
-            2D_RIGID_BODY // STACK_SANDBOX
+            2D_RIGID_BODY // STACK_MARBLES
           </span>
           {(["ALL", "Frontend & UI", "Backend & Data", "Systems & Core"] as const).map(
             (cat) => (
@@ -345,7 +431,7 @@ export function PhysicsSkillArena({ light = false }: { light?: boolean }) {
         }}
       >
         <div className="pointer-events-none absolute left-3 top-2.5 font-mono text-[10px] opacity-50">
-          GRAB, THROW & COLLIDE NODES // CLICK NODE TO INSPECT TELEMETRY
+          THROW MARBLES TO HEAR GLASS COLLISION AUDIO // CLICK TO INSPECT
         </div>
 
         {filteredSkills.map((skill, idx) => {
@@ -365,7 +451,7 @@ export function PhysicsSkillArena({ light = false }: { light?: boolean }) {
                 dragRef.current.pointerX = e.clientX - r.left;
                 dragRef.current.pointerY = e.clientY - r.top;
                 setSelectedSkill(skill);
-                play("tap");
+                playMarbleClink(4.5, skill.mass, 1.2);
               }}
               style={{
                 width: diam,
@@ -400,9 +486,7 @@ export function PhysicsSkillArena({ light = false }: { light?: boolean }) {
       {/* Selected Node Readout Bar */}
       <div
         className={`flex flex-wrap items-center justify-between gap-2 border-t px-3 py-2 font-mono text-[11px] ${
-          light
-            ? "border-black/15 bg-white"
-            : "border-white/15 bg-black"
+          light ? "border-black/15 bg-white" : "border-white/15 bg-black"
         }`}
       >
         <div className="flex items-center gap-2">
