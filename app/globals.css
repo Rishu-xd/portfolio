@@ -14,8 +14,17 @@ html {
 
 body {
     margin: 0;
-    background: #090909;
-    font-family: Arial, sans-serif;
+    background: #000000;
+    color: #ffffff;
+    font-family: "Instrument Sans", "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-serif {
+    font-family: "Instrument Serif", "Hedvig Letters Serif", Georgia, serif;
+}
+
+.font-mono {
+    font-family: "Geist Mono", "DM Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
 .activity-scroll {

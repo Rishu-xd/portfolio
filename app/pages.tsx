@@ -1,75 +1,37 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowUpRight,
-  Moon,
+  GitBranch,
+  Star,
   Sun,
+  Moon,
+  Radio,
+  Cpu,
+  Layers,
+  Terminal,
+  Sparkles,
+  ExternalLink,
+  Copy,
+  Check,
 } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useEffect, useState } from "react";
 import { bind, play } from "cuelume";
 import { GlassDock } from "../components/GlassDock";
 import "../components/GlassDock.css";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useEffect, useState } from "react";
-
-
-const projects = [
-  {
-    number: "01",
-    title: "Betterclock",
-    description: "A focused timer for getting things done together.",
-    stack: "Next.js · TypeScript",
-    href: "https://www.betterclock.xyz",
-    accent: "from-emerald-200 via-lime-300 to-green-500",
-    preview: "A calmer way to focus",
-  },
-  {
-    number: "02",
-    title: "DoLog",
-    description: "A productivity space for organizing tasks and building consistent habits.",
-    stack: "React · Motion",
-    href: "https://github.com/Rishu-xd/DoLog",
-    accent: "from-rose-200 via-pink-400 to-rose-500",
-    preview: "Make progress, every day",
-  },
-  {
-    number: "03",
-    title: "Qflow",
-    description: "A digital queue platform for reducing wait times and managing busy queues.",
-    stack: "Flutter · Next.js · Supabase",
-    href: "https://github.com/Rishu-xd",
-    accent: "from-sky-200 via-cyan-400 to-blue-500",
-    preview: "Your place in line, made simple",
-  },
-];
-
-const contactLinks = [
-  { label: "GitHub", href: "https://github.com/Rishu-xd", icon: "/github.png", external: true },
-  { label: "LinkedIn", href: "https://linkedin.com", icon: "/linkedin.png", external: true },
-  { label: "Twitter", href: "https://x.com", icon: "/x.png", external: true },
-  { label: "Mail", href: "mailto:rishu99xd@gmail.com", icon: "/gmailnew.png", external: false },
-];
-
-type SkillCategory = "All" | "Backend" | "Frontend" | "Design";
-
-const skillCategories: SkillCategory[] = ["All", "Backend", "Frontend", "Design"];
-
-const skills = [
-  { name: "TypeScript", image: "typescript.png", categories: ["Frontend"] },
-  { name: "Tailwind CSS", image: "tailwindcss.png", categories: ["Frontend", "Design"] },
-  { name: "Supabase", image: "supabase.png", categories: ["Backend"] },
-  { name: "React", image: "react.png", categories: ["Frontend"] },
-  { name: "Python", image: "python.png", categories: ["Backend"] },
-  { name: "PostgreSQL", image: "postgresql.png", categories: ["Backend"] },
-  { name: "Node.js", image: "nodejs.png", categories: ["Backend"] },
-  { name: "Next.js", image: "next-js.png", categories: ["Frontend"] },
-  { name: "Git", image: "git.png", categories: ["Backend", "Frontend"] },
-  { name: "Docker", image: "docker.png", categories: ["Backend"] },
-  { name: "C++", image: "cpp.png", categories: ["Backend"] },
-  { name: "C", image: "c-lang.png", categories: ["Backend"] },
-];
-
-const roles = ["Full-stack", "Product engineer"];
+import { ThreeArtifact } from "../components/ThreeArtifact";
+import { PhysicsSkillArena } from "../components/PhysicsSkillArena";
+import { ModeSwitcher } from "../components/ModeSwitcher";
+import {
+  PROFILE,
+  PROJECTS,
+  ENGINEERING_LOG,
+  SOCIAL_LINKS,
+} from "./data/portfolio";
+import type { GitHubRepoSummary } from "./api/github-repos/route";
 
 type ContributionActivity = {
   username: string;
@@ -78,453 +40,895 @@ type ContributionActivity = {
   cells: { date: string; level: number; count: number }[];
 };
 
-const darkActivityColors = ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"];
-const lightActivityColors = ["#f0f0f0", "#d0d0d0", "#a3a3a3", "#737373", "#333333"];
+type SpotifyState = {
+  isPlaying: boolean;
+  title?: string;
+  artist?: string;
+  album?: string;
+  albumImageUrl?: string;
+  songUrl?: string;
+};
 
-export default function AlternatePortfolio() {
+const darkActivityColors = ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"];
+const lightActivityColors = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"];
+
+export default function InteractivePortfolio() {
   const [lightTheme, setLightTheme] = useState(false);
   const [roleIndex, setRoleIndex] = useState(0);
-  const [skillCategory, setSkillCategory] = useState<SkillCategory>("All");
+  const [projectFilter, setProjectFilter] = useState<string>("ALL");
   const [activity, setActivity] = useState<ContributionActivity | null>(null);
   const [activityError, setActivityError] = useState(false);
+  const [liveRepos, setLiveRepos] = useState<GitHubRepoSummary[]>([]);
+  const [spotify, setSpotify] = useState<SpotifyState | null>(null);
+  const [clockStr, setClockStr] = useState<string>("--:--:-- IST");
+  const [copiedEmail, setCopiedEmail] = useState(false);
+
   const shouldReduceMotion = useReducedMotion();
-  const reveal = shouldReduceMotion
-    ? { initial: false as const, whileInView: undefined }
-    : { initial: { opacity: 0, y: 16 }, whileInView: { opacity: 1, y: 0 } };
-  const itemReveal = shouldReduceMotion
-    ? { initial: false as const, whileInView: undefined }
-    : { initial: { opacity: 0, y: 12 }, whileInView: { opacity: 1, y: 0 } };
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
-      setRoleIndex((currentIndex) => (currentIndex + 1) % roles.length);
-    }, 3300);
+    const unbind = bind();
+    return () => unbind();
+  }, []);
 
+  // Rotate secondary roles
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setRoleIndex((i) => (i + 1) % PROFILE.secondaryRoles.length);
+    }, 3200);
     return () => window.clearInterval(interval);
   }, []);
 
-  useEffect(() => bind(), []);
+  // Live IST precision clock
+  useEffect(() => {
+    const updateClock = () => {
+      try {
+        const now = new Date();
+        const formatted = new Intl.DateTimeFormat("en-IN", {
+          timeZone: "Asia/Kolkata",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }).format(now);
+        setClockStr(`${formatted} IST`);
+      } catch {
+        setClockStr("IST (UTC+5:30)");
+      }
+    };
+    updateClock();
+    const id = window.setInterval(updateClock, 1000);
+    return () => window.clearInterval(id);
+  }, []);
 
+  // Fetch GitHub contributions
   useEffect(() => {
     const controller = new AbortController();
     const year = new Date().getFullYear();
 
     fetch(`/api/github-contributions?year=${year}`, { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error("GitHub activity is temporarily unavailable.");
-        }
-
-        const data: ContributionActivity = await response.json();
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Unavailable");
+        const data: ContributionActivity = await res.json();
         setActivity(data);
       })
-      .catch((error: unknown) => {
-        if (error instanceof Error && error.name === "AbortError") {
-          return;
-        }
+      .catch((err: unknown) => {
+        if (err instanceof Error && err.name === "AbortError") return;
         setActivityError(true);
       });
 
     return () => controller.abort();
   }, []);
 
-  return (
-    <motion.main
-      initial={shouldReduceMotion ? false : { opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
-      className={`relative isolate min-h-svh px-3 pb-12 pt-0 transition-colors sm:px-6 backdrop-blur-3xl  ${
-        lightTheme ? "bg-[#f4f3ef] text-[#20211e]" : "bg-[#0b0b0b] text-[#ededed] "
-      }`}
-      id="home"
-    >
-      <div
-        className={`portfolio-frame relative z-10 mx-auto min-h-svh w-full max-w-[628px] backdrop-blur-2xl`}
-      >
+  // Fetch live GitHub repositories
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/github-repos", { signal: controller.signal })
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = (await res.json()) as { repos?: GitHubRepoSummary[] };
+        if (data.repos) setLiveRepos(data.repos);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
 
-        
-        <motion.header
-          initial={shouldReduceMotion ? false : { opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.45, delay: shouldReduceMotion ? 0 : 0.08 }}
-          className={`sticky top-0 z-10 flex h-10 items-center justify-between  px-2 backdrop-blur-sm sm:px-3 `}
-        >
-          <motion.a href="#home" data-cuelume-navigate whileHover={shouldReduceMotion ? undefined : { y: -1 }} className="font-serif text-lg leading-none tracking-tight">
-            Rishu
-          </motion.a>
-          <nav className="flex h-full items-center gap-3 text-[10px] text-current/60 sm:gap-5 sm:text-xs" aria-label="Main navigation">
-            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="text-current transition-colors hover:text-current" href="#home" data-cuelume-navigate>Home</motion.a>
-            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="transition-colors hover:text-current" href="#projects" data-cuelume-navigate>Projects</motion.a>
-            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="transition-colors hover:text-current" href="#experience" data-cuelume-navigate>Experience</motion.a>
-            <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="transition-colors hover:text-current" href="#contact" data-cuelume-navigate>Contact</motion.a>
+  // Fetch Spotify now playing
+  useEffect(() => {
+    fetch("/api/spotify-now-playing")
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = (await res.json()) as SpotifyState;
+        setSpotify(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const filteredProjects =
+    projectFilter === "ALL"
+      ? PROJECTS
+      : PROJECTS.filter((p) => p.category === projectFilter);
+
+  // Additional live repos from GitHub that aren't already in our curated 7
+  const curatedNames = new Set([
+    "better-clock",
+    "betterclock",
+    "arc",
+    "dolog",
+    "qflow",
+    "birdwiki",
+    "flask-music-downloadser",
+    "pinterest-video-downloader-bot-",
+  ]);
+
+  const extraGithubRepos = liveRepos
+    .filter((r) => !curatedNames.has(r.name.toLowerCase()))
+    .slice(0, 6);
+
+  const copyEmail = () => {
+    navigator.clipboard?.writeText(PROFILE.email);
+    setCopiedEmail(true);
+    play("success");
+    setTimeout(() => setCopiedEmail(false), 2000);
+  };
+
+  return (
+    <div
+      className={`relative min-h-svh pb-24 transition-colors duration-300 ${
+        lightTheme
+          ? "bg-white text-black selection:bg-black selection:text-white"
+          : "bg-black text-white selection:bg-white selection:text-black"
+      }`}
+    >
+      {/* Subtle monochrome grid lines */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 opacity-30"
+        style={{
+          backgroundImage: lightTheme
+            ? "linear-gradient(to right, rgba(0,0,0,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.06) 1px, transparent 1px)"
+            : "linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)",
+          backgroundSize: "64px 64px",
+        }}
+      />
+
+      {/* Top System Telemetry Strip */}
+      <header
+        className={`sticky top-0 z-40 border-b backdrop-blur-md transition-colors ${
+          lightTheme
+            ? "border-black/15 bg-white/90"
+            : "border-white/15 bg-black/90"
+        }`}
+      >
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-2.5 sm:px-6">
+          <div className="flex items-center gap-3">
+            <a
+              href="#top"
+              data-cuelume-navigate
+              className="font-serif text-lg tracking-tight font-normal"
+            >
+              Akhand Veer Singh
+            </a>
+            <span
+              className={`hidden rounded-[2px] border px-1.5 py-0.5 font-mono text-[10px] sm:inline-block ${
+                lightTheme
+                  ? "border-black/25 bg-black/5 text-black"
+                  : "border-white/25 bg-white/10 text-white"
+              }`}
+            >
+              @{PROFILE.handle}
+            </span>
+          </div>
+
+          {/* Center navigation */}
+          <nav
+            aria-label="Primary sections"
+            className="hidden items-center gap-5 font-mono text-[11px] uppercase tracking-wider md:flex"
+          >
+            <a
+              href="#projects"
+              data-cuelume-navigate
+              className="opacity-65 transition-opacity hover:opacity-100"
+            >
+              [01] Work ({PROJECTS.length})
+            </a>
+            <a
+              href="#physics"
+              data-cuelume-navigate
+              className="opacity-65 transition-opacity hover:opacity-100"
+            >
+              [02] Physics Lab
+            </a>
+            <a
+              href="#telemetry"
+              data-cuelume-navigate
+              className="opacity-65 transition-opacity hover:opacity-100"
+            >
+              [03] Telemetry
+            </a>
+            <Link
+              href="/minimal"
+              data-cuelume-navigate
+              className="opacity-65 transition-opacity hover:opacity-100"
+            >
+              [04] 1-Page Index
+            </Link>
+            <Link
+              href="/llm"
+              data-cuelume-navigate
+              className="opacity-65 transition-opacity hover:opacity-100"
+            >
+              [05] LLM Wiki
+            </Link>
+          </nav>
+
+          {/* Right telemetry + Tactile Theme Toggle */}
+          <div className="flex items-center gap-2.5 font-mono text-[11px]">
+            <span className="hidden items-center gap-1.5 opacity-75 sm:inline-flex">
+              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              {clockStr}
+            </span>
+
             <button
               type="button"
-              aria-label={lightTheme ? "Switch to dark theme" : "Switch to light theme"}
-              aria-pressed={lightTheme}
-              data-cuelume-toggle
-              onClick={() => setLightTheme((currentTheme) => !currentTheme)}
-              className="ml-1 grid size-7 place-items-center rounded-full transition-colors hover:bg-current/10"
+              onClick={() => {
+                setLightTheme((v) => !v);
+                play("toggle");
+              }}
+              aria-label={lightTheme ? "Switch to dark mode" : "Switch to light mode"}
+              className={`inline-flex items-center gap-1.5 rounded-sm border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
+                lightTheme
+                  ? "border-black bg-black text-white"
+                  : "border-white bg-white text-black"
+              }`}
             >
-              <motion.span key={lightTheme ? "sun" : "moon"} initial={shouldReduceMotion ? false : { scale: 0.5, rotate: -35, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }} transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}>
-                {lightTheme ? <Sun className="size-3.5" aria-hidden="true" /> : <Moon className="size-3.5" aria-hidden="true" />}
-              </motion.span>
-            </button>
-          </nav>
-        </motion.header>
-
-        <motion.div
-          initial={shouldReduceMotion ? false : { opacity: 0, scaleY: 0.7 }}
-          animate={{ opacity: 1, scaleY: 1 }}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.55, delay: shouldReduceMotion ? 0 : 0.15 }}
-          className={`relative h-[100px] rounded-xl  ${
-              lightTheme
-                ? "shadow-[0_8px_5px_rgba(0,0,0,0.2)]"
-                : "shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
-            } overflow-hidden border-b border-white/10 bg-[#142321]`}
-          aria-hidden="true"
-        >
-          <video
-            src="/video/banner.mp4"
-            autoPlay={!shouldReduceMotion}
-            loop
-            muted
-            playsInline
-            preload="metadata"
-            className="absolute inset-0 size-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
-          <div className="absolute inset-x-0 top-0 h-px bg-white/15" />
-          <motion.div
-            initial={false}
-            animate={shouldReduceMotion ? undefined : { x: [-90, 90] }}
-            transition={shouldReduceMotion ? undefined : { duration: 4, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
-            className="absolute left-[48%] top-0 h-full w-16 -skew-x-12 bg-white/15 blur-xl"
-          />
-        </motion.div>
-
-        <motion.section
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.45, delay: shouldReduceMotion ? 0 : 0.2 }}
-          className={`flex items-center gap-4  px-4 py-4 sm:px-5
-          `}
-          aria-labelledby="profile-name"
-        >
-          <motion.div
-            initial={shouldReduceMotion ? false : { scale: 0.86, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 210, damping: 18, delay: shouldReduceMotion ? 0 : 0.28 }}
-          >
-          <Image
-            src="/images/hero.jpg"
-            alt="Akhand Veer Singh"
-            width={76}
-            height={76}
-            className={`size-[76px] shrink-0 rounded-lg border-[2px] border-white/90  object-cover ${
-              lightTheme
-                ? "shadow-[0_8px_8px_rgba(0,0,0,0.2)]"
-                : "shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
-            }`}
-          />
-
-          
-          </motion.div>
-          <div className="min-w-0">
-            <p className="text-[10px] text-current/50">✦</p>
-            <h1 id="profile-name" className="mt-0.5 font-serif text-[22px] leading-tight">Akhand Veer Singh</h1>
-            <p className="mt-0.5 h-5 overflow-hidden text-sm font-medium text-current/55" aria-live="polite">
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={roles[roleIndex]}
-                  initial={shouldReduceMotion ? false : { y: -16, opacity: 0, filter: "blur(5px)" }}
-                  animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-                  exit={{ y: 8, opacity: 0, filter: "blur(5px)" }}
-                  transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeInOut" }}
-                  className="block"
-                >
-                  {roles[roleIndex]}
-                </motion.span>
-              </AnimatePresence>
-            </p>
-            <p className="mt-1 text-[10px] text-current/40">India</p>
-          </div>
-        
-        </motion.section>
-
-
-
-
-        
-        <motion.section
-          {...reveal}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeOut" }}
-          viewport={{ once: true, amount: 0.3 }}
-          id="about"
-          className={` px-4 py-5 sm:px-5 `}
-          aria-labelledby="about-title"
-        >
-          {/* <h2 id="about-title" className="font-serif text-[22px] leading-tight">About</h2> */}
-          <ul className="mt-4 list-disc space-y-2.5 pl-4 text-[13px] leading-[1.5] text-current/80 marker:text-current/35 text-gray-400">
-            <motion.li {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.08 }}>
-              I&apos;m a <strong className={`font-semibold text-current ${lightTheme? "text-gray-800":"text-white"}`}>Product Engineer</strong> passionate about crafting digital products where thoughtful design meets clean, scalable code.
-            </motion.li>
-            <motion.li {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.16 }}>
-              I design and develop modern interfaces with <strong className={`font-semibold text-current ${lightTheme? "text-gray-800":"text-white"}`}>TypeScript, React, Next.js, and Tailwind CSS</strong>, focusing on usability, performance, and delightful interactions.
-            </motion.li>
-            <motion.li {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.24 }}>
-              I enjoy transforming ideas into polished products, exploring new technologies, refining details, and creating intuitive experiences.
-            </motion.li>
-          </ul>
-
-        
-          <GlassDock
-             magnify={1.3}
-             spread={2}
-             lift={10}
-           />
-
-          <motion.div id="gitb" {...itemReveal} transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : 0.16 }} className={`mt-3 rounded-lg border-2 p-3 border-dashed  ${
-            lightTheme ? "border-black/[0.2] bg-black/[0.1] hover:border-gray-700"  : "border-white/[0.08] bg-white/[0.02] hover:border-white/50"
-          }`}>
-            <div className="flex items-baseline justify-between gap-2">
-              <h2 className="font-serif text-sm">GitHub activity</h2>
-              {activity && (
-                <span className="text-[10px] text-current/50">
-                  {activity.total.toLocaleString()} contributions in {activity.year}
-                </span>
+              {lightTheme ? (
+                <>
+                  <Sun className="size-3" /> WHITE
+                </>
+              ) : (
+                <>
+                  <Moon className="size-3" /> BLACK
+                </>
               )}
-            </div>
-            {activity ? (
-              <div
-                className="activity-scroll mt-3 overflow-x-auto pt-8 pb-1"
-                role="img"
-                aria-label={`${activity.total.toLocaleString()} GitHub contributions in ${activity.year}`}
-              >
-                <div className="grid w-max grid-rows-7 grid-flow-col gap-[3px]">
-                  {activity.cells.map(({ date, level, count }) => {
-                    const intensity = Math.min(Math.max(level, 0), 4);
+            </button>
+          </div>
+        </div>
+      </header>
 
-                    return (
-                      <motion.span
-                        key={date}
-                        aria-hidden="true"
-                        className={`size-[9px] rounded-[2px]  ${count > 0 ? "relative" : ""}`}
-                        style={{ backgroundColor: (lightTheme ? lightActivityColors : darkActivityColors)[intensity] }}
-                        initial={count > 0 ? "rest" : false}
-                        animate={count > 0 ? "rest" : undefined}
-                        whileHover={count > 0 ? "hover" : undefined}
-                        variants={{
-                          rest: { scale: 1, zIndex: 0, boxShadow: "0 0 0 rgba(57, 211, 83, 0)" },
-                          hover: {
-                            scale: shouldReduceMotion ? 1 : 1.5,
-                            zIndex: 30,
-                            boxShadow: lightTheme
-                              ? "0 0 8px rgba(0, 0, 0, 0.45)"
-                              : "0 0 8px rgba(57, 211, 83, 0.85)",
-                          },
-                        }}
-                        transition={{ duration: shouldReduceMotion ? 0 : 0.15 }}
-                      >
-                        {count > 0 && (
-                          <motion.span
-                            aria-hidden="true"
-                            className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-1 -translate-x-1/2 whitespace-nowrap rounded border border-[#242f28] bg-[#000d05] px-2 py-1 text-[5px] leading-tight text-white shadow-lg"
-                            variants={{
-                              rest: { opacity: 0, y: 4, scale: 0.95 },
-                              hover: { opacity: 1, y: 0, scale: 1 },
-                            }}
-                            transition={{ duration: shouldReduceMotion ? 0 : 0.16 }}
-                          >
-                            {count} contribution{count === 1 ? "" : "s"}
-                            {new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })}
-                            {" · "}
-                          </motion.span>
-                        )}
-                      </motion.span>
-                    );
-                  })}
+      <main id="top" className="relative z-10 mx-auto max-w-5xl px-4 pt-6 sm:px-6 sm:pt-10">
+        {/* HERO GRID: Left Identity & Bio + Right Interactive Three.js Artifact */}
+        <section
+          aria-labelledby="hero-heading"
+          className="grid grid-cols-1 gap-6 lg:grid-cols-12"
+        >
+          {/* Left 7 columns: Identity Card */}
+          <div
+            className={`flex flex-col justify-between rounded-sm border p-5 sm:p-6 lg:col-span-7 ${
+              lightTheme
+                ? "border-black/20 bg-neutral-50"
+                : "border-white/20 bg-neutral-950"
+            }`}
+          >
+            <div>
+              {/* Video Banner Strip in full natural color */}
+              <div className="relative mb-5 h-24 w-full overflow-hidden rounded-sm border border-current/20 bg-black">
+                <video
+                  src={PROFILE.bannerVideo}
+                  autoPlay={!shouldReduceMotion}
+                  loop
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="size-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/25 to-transparent" />
+                <div className="absolute bottom-2 left-3 flex items-center gap-2 font-mono text-[10px] text-white">
+                  <span className="inline-block size-2 rounded-full bg-emerald-400" />
+                  <span>SYS.NODE // THORFINN.DEV</span>
+                  <span className="opacity-70">· {PROFILE.coordinates}</span>
                 </div>
               </div>
-            ) : activityError ? (
-              <p className="mt-3 text-xs text-current/50">
-                GitHub activity is temporarily unavailable.
-              </p>
-            ) : (
-              <p className="mt-3 text-xs text-current/50" role="status">
-                Loading GitHub activity…
-              </p>
-            )}
-            <a
-              href="https://github.com/Rishu-xd"
-              target="_blank"
-              rel="noreferrer"
-              data-cuelume-navigate
-              className="mt-3 inline-block text-[10px] text-current/50 transition-colors hover:text-current"
-            >
-              View GitHub profile
-            </a>
-          </motion.div>
-        </motion.section>
-        
-        <motion.section
-          {...reveal}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeOut" }}
-          viewport={{ once: true, amount: 0.25 }}
-          id="skills"
-          className={`overflow-hidden py-4 `}
-          aria-labelledby="skills-title"
-        >
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5">
-            <h2 id="skills-title" className="font-serif text-[22px] leading-tight">Tech Stack</h2>
-            <nav className="flex flex-wrap gap-1" aria-label="Filter tech stack">
-              {skillCategories.map((category) => (
+
+              {/* Avatar + Name + Animated Role */}
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="relative">
+                  <Image
+                    src={PROFILE.avatar}
+                    alt={PROFILE.name}
+                    width={76}
+                    height={76}
+                    priority
+                    className="size-[76px] rounded-sm border border-current/30 object-cover"
+                  />
+                  <span
+                    title="Available for high-impact engineering roles & builds"
+                    className="absolute -bottom-1 -right-1 size-3 rounded-full border-2 border-black bg-emerald-400"
+                  />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest opacity-60">
+                    <span>IND // FULL-STACK & SYSTEMS</span>
+                  </div>
+                  <h1
+                    id="hero-heading"
+                    className="mt-0.5 font-serif text-3xl tracking-tight sm:text-4xl"
+                  >
+                    {PROFILE.name}
+                  </h1>
+
+                  <div className="mt-1 flex items-center gap-2 font-mono text-xs">
+                    <span className="opacity-50">&gt;</span>
+                    <div className="h-5 overflow-hidden font-medium">
+                      <AnimatePresence mode="wait">
+                        <motion.span
+                          key={PROFILE.secondaryRoles[roleIndex]}
+                          initial={
+                            shouldReduceMotion
+                              ? false
+                              : { y: -14, opacity: 0 }
+                          }
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={{ y: 12, opacity: 0 }}
+                          transition={{ duration: 0.28 }}
+                          className="block"
+                        >
+                          {PROFILE.secondaryRoles[roleIndex]}
+                        </motion.span>
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Direct Human Copywriting */}
+              <div className="mt-5 space-y-2.5 text-sm leading-relaxed opacity-85">
+                <p>
+                  I build fast, tactile web software and backend automation tools. My work sits at the intersection of{" "}
+                  <strong className="font-semibold underline decoration-current/40 underline-offset-4">
+                    deterministic systems engineering
+                  </strong>{" "}
+                  and{" "}
+                  <strong className="font-semibold underline decoration-current/40 underline-offset-4">
+                    high-craft interaction design
+                  </strong>
+                  —where spring physics, WebGL/Three.js topologies, and clean database schemas work together.
+                </p>
+                <p className="text-[13px] opacity-80">
+                  Core stack:{" "}
+                  <span className="font-mono text-xs">
+                    TypeScript · Next.js · React · Python (FastAPI / Flask / Playwright) · C++ · PostgreSQL · Supabase
+                  </span>
+                  .
+                </p>
+              </div>
+            </div>
+
+            {/* Bottom bar: GlassDock + Quick mode jumps + Copy Email */}
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-current/15 pt-4">
+              <div className="flex items-center gap-2">
+                <GlassDock magnify={1.28} spread={2} lift={8} />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 font-mono text-[11px]">
                 <button
                   type="button"
-                  key={category}
-                  aria-pressed={skillCategory === category}
-                  onClick={() => setSkillCategory(category)}
-                  className={`rounded-md border border-dashed px-2.5 py-1 text-[10px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
-                    skillCategory === category
-                      ? lightTheme
-                        ? "border-black/50 bg-black/10 text-current"
-                        : "border-white/50 bg-white/10 text-current"
-                      : "border-current/20 text-current/55 hover:border-current/45 hover:text-current"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </nav>
-          </div>
-          <div
-            role="group"
-            aria-label="Technologies"
-            className="flex h-[17rem] flex-wrap content-start gap-2 rounded-[7px] border-2 border-dashed border-[#242f28] p-3 hover:border-[#728077] sm:h-[9rem] lg:h-[7rem]"
-          >
-            {skills
-              .filter((skill) => skillCategory === "All" || skill.categories.includes(skillCategory))
-              .map((skill) => (
-                <motion.button
-                  type="button"
-                  whileHover={shouldReduceMotion ? undefined : { scale: 1.03 }}
-                  whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
-                  className={`group flex h-8 w-full basis-[48%] items-center justify-center gap-2 rounded-[7px] border px-3 grayscale transition duration-200 hover:grayscale-0 focus-visible:grayscale-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 sm:basis-[23%] lg:w-max lg:basis-auto ${
+                  onClick={copyEmail}
+                  className={`inline-flex items-center gap-1.5 rounded-sm border px-3 py-1.5 transition-colors ${
                     lightTheme
-                      ? "border-black/20  hover:bg-gray-900"
-                      : "border-white/20  hover:bg-lime-300/10"
+                      ? "border-black/25 bg-black/5 hover:bg-black hover:text-white"
+                      : "border-white/25 bg-white/5 hover:bg-white hover:text-black"
                   }`}
-                  key={skill.name}
                 >
-                  <Image
-                    src={`/skills/${skill.image}`}
-                    alt=""
-                    width={25}
-                    height={25}
-                    className="size-4 shrink-0 object-contain"
-                  />
-                  <span className="text-[10px] leading-tight text-current/75">{skill.name}</span>
-                </motion.button>
-              ))}
-          </div>
-        </motion.section>
-
-        <motion.section
-          {...reveal}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeOut" }}
-          viewport={{ once: true, amount: 0.35 }}
-          id="experience"
-          className={`border-b px-4 py-4 sm:px-5 ${
-            lightTheme ? "border-black/[0.1]" : "border-white/[0.1]"
-          }`}
-          aria-labelledby="experience-title"
-        >
-        
-        
-
-         
-        </motion.section>
-
-
-        <motion.section
-          {...reveal}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: "easeOut" }}
-          viewport={{ once: true, amount: 0.15 }}
-          id="projects"
-          className="px-3 py-4 sm:px-3.5"
-          aria-labelledby="projects-title"
-        >
-          <div className="mb-3 flex items-center justify-between px-1">
-            <h2 id="projects-title" className="font-serif text-[22px] leading-tight">Projects</h2>
-            <motion.a whileHover={shouldReduceMotion ? undefined : { x: 2 }} className="inline-flex items-center gap-1 text-[10px] text-current/45 transition-colors hover:text-current" href="https://github.com/Rishu-xd" target="_blank" rel="noreferrer" data-cuelume-navigate>
-              View all <ArrowUpRight className="size-3" aria-hidden="true" />
-            </motion.a>
+                  {copiedEmail ? (
+                    <>
+                      <Check className="size-3.5" /> COPIED EMAIL
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="size-3.5" /> {PROFILE.email}
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {projects.map((project, index) => (
-              <motion.a
-                key={project.number}
-                {...itemReveal}
-                whileHover={shouldReduceMotion ? undefined : { y: -4 }}
-                whileTap={shouldReduceMotion ? undefined : { scale: 0.99 }}
-                transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : index * 0.09 }}
-                href={project.href}
-                data-cuelume-navigate
-                target="_blank"
-                rel="noreferrer"
-                className={`group overflow-hidden rounded-md border transition-transform hover:-translate-y-0.5 ${
-                  lightTheme ? "border-black/10 bg-white/50" : "border-white/10 bg-white/[0.025]"
-                }`}
-              >
-                <div className={`relative aspect-[1.75] overflow-hidden bg-gradient-to-br ${project.accent} p-3`}>
-                  <div className="absolute inset-x-0 top-0 h-5 bg-black/[0.12]" />
-                  <div className="absolute left-2 top-1.5 flex gap-1" aria-hidden="true">
-                    <span className="size-1 rounded-full bg-white/80" />
-                    <span className="size-1 rounded-full bg-white/55" />
-                    <span className="size-1 rounded-full bg-white/35" />
-                  </div>
-                  <div className="absolute inset-x-5 bottom-[-18%] top-[27%] rounded-t-md border border-black/10 bg-[#f7f8f5] p-2.5 shadow-xl transition-transform duration-300 group-hover:translate-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="h-1.5 w-9 rounded-full bg-[#20211e]/75" />
-                      <span className="flex gap-1">
-                        <span className="h-1 w-3 rounded-full bg-[#20211e]/20" />
-                        <span className="h-1 w-3 rounded-full bg-[#20211e]/20" />
-                        <span className="h-1 w-3 rounded-full bg-lime-500" />
+          {/* Right 5 columns: Interactive Three.js Topology Rig */}
+          <div className="flex flex-col justify-between gap-4 lg:col-span-5">
+            <ThreeArtifact light={lightTheme} />
+
+            {/* Multi-View Switcher Callout Card */}
+            <div
+              className={`flex flex-col justify-between rounded-sm border p-4 font-mono text-xs ${
+                lightTheme
+                  ? "border-black/20 bg-neutral-50"
+                  : "border-white/20 bg-neutral-950"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase tracking-wider opacity-70">
+                  PORTFOLIO ARCHITECTURE // 3 SURFACES
+                </span>
+                <span
+                  className={`rounded-[2px] px-1.5 py-0.5 text-[9px] font-bold ${
+                    lightTheme
+                      ? "bg-black text-white"
+                      : "bg-white text-black"
+                  }`}
+                >
+                  KEY: 1 / 2 / 3
+                </span>
+              </div>
+              <p className="mt-1.5 font-sans text-xs leading-relaxed opacity-75">
+                Switch between this interactive physics studio, a zero-scroll single-screen index, or a plain-text Wikipedia corpus built for LLM web scrapers.
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Link
+                  href="/minimal"
+                  data-cuelume-navigate
+                  className={`flex items-center justify-between rounded-[2px] border px-2.5 py-2 text-[11px] transition-colors ${
+                    lightTheme
+                      ? "border-black/25 hover:bg-black hover:text-white"
+                      : "border-white/25 hover:bg-white hover:text-black"
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    <Terminal className="size-3.5" /> 02. Minimal 1-Page
+                  </span>
+                  <ArrowUpRight className="size-3.5" />
+                </Link>
+                <Link
+                  href="/llm"
+                  data-cuelume-navigate
+                  className={`flex items-center justify-between rounded-[2px] border px-2.5 py-2 text-[11px] transition-colors ${
+                    lightTheme
+                      ? "border-black/25 hover:bg-black hover:text-white"
+                      : "border-white/25 hover:bg-white hover:text-black"
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    <Layers className="size-3.5" /> 03. LLM / Wiki
+                  </span>
+                  <ArrowUpRight className="size-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 01: EXPANDED GITHUB PROJECTS INDEX */}
+        <section id="projects" className="mt-14 scroll-mt-16" aria-labelledby="projects-heading">
+          <div className="flex flex-wrap items-end justify-between gap-4 border-b border-current/20 pb-3">
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-widest opacity-60">
+                [01 // SHIPPED SYSTEMS & GITHUB REPOSITORIES]
+              </div>
+              <h2 id="projects-heading" className="mt-1 font-serif text-3xl tracking-tight">
+                Selected Engineering Work
+              </h2>
+            </div>
+
+            {/* Category filter tabs */}
+            <div className="flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
+              {(["ALL", "Full-Stack", "Systems & AI", "Automation & Tools"] as const).map(
+                (cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => {
+                      setProjectFilter(cat);
+                      play("select");
+                    }}
+                    className={`rounded-sm border px-2.5 py-1 transition-colors ${
+                      projectFilter === cat
+                        ? lightTheme
+                          ? "border-black bg-black text-white font-semibold"
+                          : "border-white bg-white text-black font-semibold"
+                        : "border-current/20 opacity-65 hover:opacity-100"
+                    }`}
+                  >
+                    {cat === "ALL" ? `ALL (${PROJECTS.length})` : cat}
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+
+          {/* Asymmetric Architectural Ledger Grid */}
+          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+            {filteredProjects.map((project, idx) => {
+              const isFeatured = idx === 0 && projectFilter === "ALL";
+              return (
+                <motion.article
+                  key={project.id}
+                  layout
+                  initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                  whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.15 }}
+                  transition={{ duration: 0.3, delay: idx * 0.04 }}
+                  className={`group relative flex flex-col justify-between rounded-sm border p-5 transition-colors ${
+                    isFeatured ? "md:col-span-2" : ""
+                  } ${
+                    lightTheme
+                      ? "border-black/20 bg-neutral-50 hover:border-black"
+                      : "border-white/20 bg-neutral-950 hover:border-white"
+                  }`}
+                >
+                  <div>
+                    {/* Top metadata row */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[11px]">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`rounded-[2px] px-1.5 py-0.5 text-[10px] font-bold ${
+                            lightTheme
+                              ? "bg-black text-white"
+                              : "bg-white text-black"
+                          }`}
+                        >
+                          {project.number}
+                        </span>
+                        <span className="uppercase tracking-wider opacity-70">
+                          {project.category}
+                        </span>
+                        <span className="opacity-40">·</span>
+                        <span className="opacity-70">{project.year}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`rounded-[2px] border px-1.5 py-0.5 text-[9px] uppercase ${
+                            project.status === "LIVE"
+                              ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-500 font-semibold"
+                              : "border-current/25 opacity-70"
+                          }`}
+                        >
+                          ● {project.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Title & Tagline */}
+                    <div className="mt-3 flex items-baseline justify-between gap-3">
+                      <h3 className="font-serif text-2xl tracking-tight">
+                        <a
+                          href={project.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          data-cuelume-navigate
+                          className="hover:underline"
+                        >
+                          {project.title}
+                        </a>
+                      </h3>
+                      <span className="font-mono text-[10px] opacity-60">
+                        {project.metrics}
                       </span>
                     </div>
-                    <div className="mt-5 flex h-[55%] flex-col items-center justify-center rounded-sm bg-gradient-to-b from-sky-100 to-emerald-100 text-center">
-                      <span className="max-w-[85%] font-serif text-[10px] leading-tight text-[#20211e] sm:text-xs">{project.preview}</span>
-                      <span className="mt-2 rounded-full bg-[#b7e64d] px-2 py-1 text-[6px] font-semibold text-[#20211e]">Explore project</span>
+
+                    <p className="mt-1 font-mono text-xs opacity-90">
+                      {project.tagline}
+                    </p>
+
+                    <p className="mt-3 text-[13px] leading-relaxed opacity-80">
+                      {project.description}
+                    </p>
+
+                    <div
+                      className={`mt-3 rounded-sm border-l-2 pl-3 font-mono text-[11px] leading-relaxed opacity-75 ${
+                        lightTheme ? "border-black/50" : "border-white/50"
+                      }`}
+                    >
+                      <span className="font-semibold uppercase">Arch: </span>
+                      {project.architecture}
                     </div>
                   </div>
-                </div>
-                <div className="flex items-start justify-between gap-2 p-3">
-                  <div>
-                    <span className="text-[9px] text-current/35">{project.number}</span>
-                    <h3 className="mt-0.5 text-sm font-medium">{project.title}</h3>
-                    <p className="mt-1 text-[10px] leading-relaxed text-current/50">{project.description}</p>
-                    <p className="mt-2 text-[9px] text-current/35">{project.stack}</p>
+
+                  {/* Stack Pills & Action Links */}
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-current/15 pt-3.5">
+                    <div className="flex flex-wrap gap-1.5">
+                      {project.stack.map((tech) => (
+                        <span
+                          key={tech}
+                          className="rounded-[2px] border border-current/20 px-2 py-0.5 font-mono text-[10px] opacity-80"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-3 font-mono text-[11px]">
+                      {project.liveHref && (
+                        <a
+                          href={project.liveHref}
+                          target="_blank"
+                          rel="noreferrer"
+                          data-cuelume-navigate
+                          className="inline-flex items-center gap-1 font-semibold underline underline-offset-4"
+                        >
+                          Live App <ExternalLink className="size-3" />
+                        </a>
+                      )}
+                      <a
+                        href={project.repoHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        data-cuelume-navigate
+                        className="inline-flex items-center gap-1 opacity-70 transition-opacity hover:opacity-100"
+                      >
+                        <GitBranch className="size-3" /> Source
+                        <ArrowUpRight className="size-3" />
+                      </a>
+                    </div>
                   </div>
-                  <ArrowUpRight className="mt-1 size-3.5 text-current/35 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
-                </div>
-              </motion.a>
-            ))}
+                </motion.article>
+              );
+            })}
           </div>
-        </motion.section>
 
+          {/* Live GitHub API Repository Feed (if additional public repos exist) */}
+          {extraGithubRepos.length > 0 && (
+            <div className="mt-6 rounded-sm border border-current/20 p-4">
+              <div className="flex items-center justify-between font-mono text-[11px]">
+                <span className="uppercase tracking-wider opacity-75">
+                  + LIVE GITHUB REPOSITORY INDEX (SYNCED FROM @RISHU-XD)
+                </span>
+                <a
+                  href={PROFILE.githubReposUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 underline underline-offset-4 opacity-75 hover:opacity-100"
+                >
+                  All 25+ Repos <ArrowUpRight className="size-3" />
+                </a>
+              </div>
+              <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                {extraGithubRepos.map((repo) => (
+                  <a
+                    key={repo.id}
+                    href={repo.htmlUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    data-cuelume-navigate
+                    className={`flex flex-col justify-between rounded-sm border p-3 transition-colors ${
+                      lightTheme
+                        ? "border-black/15 bg-white hover:border-black"
+                        : "border-white/15 bg-black hover:border-white"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 font-mono text-xs font-semibold">
+                        <span className="truncate">{repo.name}</span>
+                        <ArrowUpRight className="size-3 shrink-0 opacity-50" />
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-xs opacity-65">
+                        {repo.description || "Open-source engineering repository by @Rishu-xd."}
+                      </p>
+                    </div>
+                    <div className="mt-2.5 flex items-center justify-between font-mono text-[10px] opacity-60">
+                      <span>{repo.language}</span>
+                      {repo.stargazersCount > 0 && (
+                        <span className="inline-flex items-center gap-0.5">
+                          <Star className="size-2.5" /> {repo.stargazersCount}
+                        </span>
+                      )}
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
 
+        {/* SECTION 02: INTERACTIVE 2D RIGID-BODY PHYSICS LAB (Spring Field Removed) */}
+        <section id="physics" className="mt-14 scroll-mt-16" aria-labelledby="physics-heading">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-current/20 pb-3">
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-widest opacity-60">
+                [02 // INTERACTIVE PHYSICS & KINETIC SANDBOX]
+              </div>
+              <h2 id="physics-heading" className="mt-1 font-serif text-3xl tracking-tight">
+                Technical Stack & Rigid-Body Mechanics
+              </h2>
+            </div>
+            <p className="font-mono text-xs opacity-65">
+              Custom impulse solver · Zero external physics bloat
+            </p>
+          </div>
 
-        <motion.footer {...reveal} transition={{ duration: shouldReduceMotion ? 0 : 0.45 }} viewport={{ once: true, amount: 0.7 }} className={`flex items-center justify-between border-t px-4 py-3 text-[10px] text-current/40 ${
-          lightTheme ? "border-black/[0.1]" : "border-white/[0.1]"
-        }`}>
-          <span>Designed & built by Akhand Veer Singh</span>
-          <motion.a whileHover={shouldReduceMotion ? undefined : { y: -2 }} className="inline-flex items-center gap-1 transition-colors hover:text-current" href="#home" data-cuelume-navigate>Back to top <ArrowUpRight className="size-3" aria-hidden="true" /></motion.a>
-        </motion.footer>
-      </div>
-    </motion.main>
+          <PhysicsSkillArena light={lightTheme} />
+        </section>
+
+        {/* SECTION 03: TELEMETRY, GITHUB HEATMAP & ENGINEERING LOG */}
+        <section id="telemetry" className="mt-14 scroll-mt-16" aria-labelledby="telemetry-heading">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-current/20 pb-3">
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-widest opacity-60">
+                [03 // COMMIT TELEMETRY & ENGINEERING TIMELINE]
+              </div>
+              <h2 id="telemetry-heading" className="mt-1 font-serif text-3xl tracking-tight">
+                Execution Log & Live Signals
+              </h2>
+            </div>
+            {activity && (
+              <span className="font-mono text-xs opacity-75">
+                {activity.total.toLocaleString()} Contributions in {activity.year}
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+            {/* GitHub Heatmap + Spotify Signal (7 cols) */}
+            <div className="flex flex-col justify-between gap-4 lg:col-span-7">
+              <div
+                className={`rounded-sm border p-4 ${
+                  lightTheme
+                    ? "border-black/20 bg-neutral-50"
+                    : "border-white/20 bg-neutral-950"
+                }`}
+              >
+                <div className="flex items-center justify-between font-mono text-xs">
+                  <span className="font-semibold uppercase">
+                    GITHUB_MATRIX // @{PROFILE.handle}
+                  </span>
+                  <a
+                    href={PROFILE.github}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] opacity-70 hover:opacity-100"
+                  >
+                    Inspect Profile <ArrowUpRight className="size-3" />
+                  </a>
+                </div>
+
+                {activity ? (
+                  <div
+                    className="activity-scroll mt-4 overflow-x-auto pb-2"
+                    role="img"
+                    aria-label={`${activity.total.toLocaleString()} GitHub contributions in ${activity.year}`}
+                  >
+                    <div className="grid w-max grid-flow-col grid-rows-7 gap-[3px]">
+                      {activity.cells.map(({ date, level, count }) => {
+                        const intensity = Math.min(Math.max(level, 0), 4);
+                        return (
+                          <span
+                            key={date}
+                            title={`${date}: ${count} contribution${count === 1 ? "" : "s"}`}
+                            className="size-[10px] rounded-[1px] transition-transform hover:scale-150"
+                            style={{
+                              backgroundColor: (
+                                lightTheme ? lightActivityColors : darkActivityColors
+                              )[intensity],
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : activityError ? (
+                  <p className="mt-4 font-mono text-xs opacity-60">
+                    GitHub contribution stream offline. View directly at github.com/Rishu-xd.
+                  </p>
+                ) : (
+                  <p className="mt-4 font-mono text-xs opacity-60">
+                    Synchronizing GitHub contribution matrix…
+                  </p>
+                )}
+              </div>
+
+              {/* Live Audio / Spotify Telemetry Card */}
+              <div
+                className={`flex items-center justify-between gap-4 rounded-sm border p-4 font-mono text-xs ${
+                  lightTheme
+                    ? "border-black/20 bg-neutral-50"
+                    : "border-white/20 bg-neutral-950"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex size-10 items-center justify-center rounded-sm border ${
+                      lightTheme
+                        ? "border-black bg-black text-white"
+                        : "border-white bg-white text-black"
+                    }`}
+                  >
+                    <Radio className="size-4 animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider opacity-60">
+                      AUDIO_TELEMETRY // SPOTIFY_STREAM
+                    </div>
+                    {spotify?.isPlaying && spotify.title ? (
+                      <a
+                        href={spotify.songUrl || PROFILE.spotify}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-0.5 block font-sans text-sm font-medium hover:underline"
+                      >
+                        {spotify.title} — <span className="opacity-70">{spotify.artist}</span>
+                      </a>
+                    ) : (
+                      <div className="mt-0.5 font-sans text-sm">
+                        Offline / Deep Focus Session ·{" "}
+                        <span className="opacity-65">Lo-Fi & Systems Architecture</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <Cpu className="size-4 shrink-0 opacity-45" />
+              </div>
+            </div>
+
+            {/* Engineering Log (5 cols) */}
+            <div
+              className={`rounded-sm border p-5 lg:col-span-5 ${
+                lightTheme
+                  ? "border-black/20 bg-neutral-50"
+                  : "border-white/20 bg-neutral-950"
+              }`}
+            >
+              <div className="font-mono text-xs font-semibold uppercase tracking-wider">
+                CHRONOLOGY // BUILD LOG
+              </div>
+              <div className="mt-4 space-y-5">
+                {ENGINEERING_LOG.map((entry) => (
+                  <div
+                    key={entry.period}
+                    className="border-l-2 border-current/40 pl-3.5"
+                  >
+                    <div className="font-mono text-[10px] uppercase tracking-wider opacity-65">
+                      {entry.period} · {entry.location}
+                    </div>
+                    <h3 className="mt-0.5 font-serif text-lg leading-snug">
+                      {entry.role}
+                    </h3>
+                    <div className="font-mono text-[11px] opacity-75">
+                      {entry.org}
+                    </div>
+                    <ul className="mt-2 space-y-1.5 text-xs leading-relaxed opacity-85">
+                      {entry.bullets.map((b, i) => (
+                        <li key={i} className="flex gap-2">
+                          <span className="font-mono opacity-60">-</span>
+                          <span>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FOOTER */}
+        <footer className="mt-16 border-t border-current/20 pt-6 font-mono text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <span className="font-serif text-base">{PROFILE.name}</span>
+              <span className="ml-2 opacity-60">
+                // Built with Next.js, Three.js, Custom 2D Physics & Cuelume Audio.
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              {SOCIAL_LINKS.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target={s.external ? "_blank" : undefined}
+                  rel={s.external ? "noreferrer" : undefined}
+                  data-cuelume-navigate
+                  className="opacity-70 transition-opacity hover:opacity-100 hover:underline"
+                >
+                  {s.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        </footer>
+      </main>
+
+      {/* Persistent 3-Page Mode Switcher */}
+      <ModeSwitcher light={lightTheme} />
+    </div>
   );
 }
