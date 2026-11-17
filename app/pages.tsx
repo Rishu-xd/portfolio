@@ -25,6 +25,7 @@ import "../components/GlassDock.css";
 import { ThreeArtifact } from "../components/ThreeArtifact";
 import { PhysicsSkillArena } from "../components/PhysicsSkillArena";
 import { ModeSwitcher } from "../components/ModeSwitcher";
+import { LoadingScreen } from "../components/LoadingScreen";
 import {
   LiquidGlass,
   LiquidGlassButton,
@@ -218,6 +219,7 @@ export default function InteractivePortfolio() {
           : "bg-black text-white selection:bg-white selection:text-black"
         }`}
     >
+      <LoadingScreen />
       {/* Subtle monochrome grid lines */}
       <div
         aria-hidden="true"
